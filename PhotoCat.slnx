@@ -1,4 +1,4 @@
 <Solution>
-  <Project Path="Domain/PhotoCat.Domain.csproj" />
+  <Project Path="PhotoCat.Domain/PhotoCat.Domain.csproj" />
   <Project Path="PhotoCat.Infrastructure/PhotoCat.Infrastructure.csproj" Id="92440d59-e34b-4f20-89e3-705c2d061a6d" />
 </Solution>
