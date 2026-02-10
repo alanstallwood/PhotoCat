@@ -1,11 +1,15 @@
 BEGIN;
 
 -- =========================
+-- Enable UUID generation
+-- =========================
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- =========================
 -- Import batches
 -- =========================
 CREATE TABLE import_batches (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     source TEXT NOT NULL,                -- e.g. 'nas_scan', 'iphone', 'manual'
     started_at TIMESTAMP NOT NULL DEFAULT NOW(),
     completed_at TIMESTAMP NULL
@@ -15,10 +19,8 @@ CREATE TABLE import_batches (
 -- Photos
 -- =========================
 CREATE TABLE photos (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-
-    import_batch_id INTEGER NULL
-        REFERENCES import_batches(id) ON DELETE SET NULL,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    import_batch_id UUID REFERENCES import_batches(id) ON DELETE SET NULL,
 
     file_name TEXT NOT NULL,
     file_path TEXT NOT NULL,
@@ -43,10 +45,8 @@ CREATE INDEX idx_photos_import_batch ON photos(import_batch_id);
 -- Exif metadata
 -- =========================
 CREATE TABLE exif_data (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-
-    photo_id INTEGER NOT NULL
-        REFERENCES photos(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    photo_id UUID NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
 
     exif_key TEXT NOT NULL,
     exif_value TEXT NULL,
@@ -63,7 +63,7 @@ CREATE INDEX idx_exif_photo_id ON exif_data(photo_id);
 -- User tags
 -- =========================
 CREATE TABLE tags (
-    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
     name TEXT NOT NULL UNIQUE,
     description TEXT NULL,
@@ -75,11 +75,8 @@ CREATE TABLE tags (
 -- Photo ↔ Tag relationship
 -- =========================
 CREATE TABLE photo_tags (
-    photo_id INTEGER NOT NULL
-        REFERENCES photos(id) ON DELETE CASCADE,
-
-    tag_id INTEGER NOT NULL
-        REFERENCES tags(id) ON DELETE CASCADE,
+    photo_id UUID NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
+    tag_id UUID NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
 
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 

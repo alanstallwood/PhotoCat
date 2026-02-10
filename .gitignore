@@ -1,0 +1,10 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/Domain/obj
+/PhotoCat.Infrastructure/obj
+/.vs/PhotoCat/CopilotIndices
+/.vs/PhotoCat.slnx/v18
+/.vs/PhotoCat.slnx/FileContentIndex
+/.vs/PhotoCat.slnx/DesignTimeBuild
