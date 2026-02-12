@@ -9,3 +9,8 @@
 /.vs/PhotoCat.slnx/FileContentIndex
 /.vs/PhotoCat.slnx/DesignTimeBuild
 /PhotoCat.Domain/obj
+/.vs/ProjectEvaluation/photocat.metadata.v10.bin
+/.vs/ProjectEvaluation/photocat.strings.v10.bin
+/.vs/ProjectEvaluation/photocat.projects.v10.bin
+/PhotoCat.Application/obj/Debug/net10.0/PhotoCat.Application.AssemblyInfo.cs
+/PhotoCat.Application/obj/Debug/net10.0/PhotoCat.Application.AssemblyInfoInputs.cache
