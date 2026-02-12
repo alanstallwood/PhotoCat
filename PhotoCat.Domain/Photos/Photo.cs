@@ -4,16 +4,23 @@
     {
         public Guid Id { get; private set; }
         public string FileName { get; private set; } = null!;
-        public string FilePath { get; private set; }
+        public string FilePath { get; private set; } = null!;
         public DateTime? DateTaken { get; private set; }
-        public string FileFormat { get; private set; }
+        public string FileFormat { get; private set; } = null!;
         public long SizeBytes { get; private set; }
-        public string Checksum { get; private set; }
+        public string Checksum { get; private set; } = null!;
 
+        public CameraInfo? Camera { get; private set; } = null!;
+        public ExposureInfo? Exposure { get; private set; }
+        public Dimensions? Dimensions { get; private set; }
+        public GeoLocation? Location { get; private set; }
+
+        public ExifData? RawExif { get; private set; }
 
         // Tags are a value object collection
         private readonly List<Tag> _tags = [];
         public IReadOnlyCollection<Tag> Tags => _tags.AsReadOnly();
+
 
 
         // DB-managed audit fields
@@ -24,7 +31,7 @@
         // EF needs a private constructor
         private Photo() { }
 
-        private Photo(string fileName, string filePath, string fileFormat, long sizeBytes, string checksum, DateTime? dateTaken = null)
+        private Photo(string fileName, string filePath, string fileFormat, long sizeBytes, string checksum, DateTime? dateTaken = null, CameraInfo? cameraInfo = null, ExposureInfo? exposureInfo = null, Dimensions? dimensions = null, GeoLocation? geoLocation = null, ExifData? rawExif = null)
         {
             if (string.IsNullOrWhiteSpace(fileName))
                 throw new ArgumentException("FileName cannot be empty.", nameof(fileName));
@@ -49,9 +56,14 @@
             SizeBytes = sizeBytes;
             Checksum = checksum;
             DateTaken = dateTaken;
+            Camera = cameraInfo;
+            Exposure = exposureInfo;
+            Dimensions = dimensions;
+            Location = geoLocation;
+            RawExif = rawExif ?? ExifData.Empty;
         }
 
-        public static Photo Create(string fileName, string filePath, string fileFormat, long sizeBytes, string checksum, DateTime? dateTaken = null, IEnumerable<string>? tags = null)
+        public static Photo Create(string fileName, string filePath, string fileFormat, long sizeBytes, string checksum, DateTime? dateTaken = null, IEnumerable<string>? tags = null, IDictionary<string, string>? rawExif = null)
         {
             var photo = new Photo(fileName, filePath, fileFormat, sizeBytes, checksum, dateTaken);
 
