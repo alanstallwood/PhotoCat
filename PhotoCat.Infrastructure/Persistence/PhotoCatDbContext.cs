@@ -1,10 +1,11 @@
 ﻿using System.Reflection.Emit;
 using Microsoft.EntityFrameworkCore;
+using PhotoCat.Application;
 using PhotoCat.Domain.Photos;
 
 namespace PhotoCat.Infrastructure
 {
-    public sealed class PhotoCatDbContext : DbContext
+    public sealed class PhotoCatDbContext : DbContext, IUnitOfWork
     {
         public DbSet<Photo> Photos => Set<Photo>();
 
@@ -17,5 +18,6 @@ namespace PhotoCat.Infrastructure
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(PhotoCatDbContext).Assembly);
         }
+
     }
 }

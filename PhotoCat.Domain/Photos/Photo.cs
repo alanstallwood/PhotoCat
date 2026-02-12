@@ -4,34 +4,85 @@
     {
         public Guid Id { get; private set; }
         public string FileName { get; private set; } = null!;
-        public DateTime TakenAt { get; private set; }
+        public string FilePath { get; private set; }
+        public DateTime? DateTaken { get; private set; }
+        public string FileFormat { get; private set; }
+        public long SizeBytes { get; private set; }
+        public string Checksum { get; private set; }
+
 
         // Tags are a value object collection
-        private readonly List<Tag> _tags = new();
+        private readonly List<Tag> _tags = [];
         public IReadOnlyCollection<Tag> Tags => _tags.AsReadOnly();
+
+
+        // DB-managed audit fields
+        public DateTime CreatedAt { get; private set; }
+        public DateTime UpdatedAt { get; private set; }
+
 
         // EF needs a private constructor
         private Photo() { }
 
-        public Photo(Guid id, string fileName, DateTime takenAt)
+        private Photo(string fileName, string filePath, string fileFormat, long sizeBytes, string checksum, DateTime? dateTaken = null)
         {
             if (string.IsNullOrWhiteSpace(fileName))
-                throw new ArgumentException("FileName is required", nameof(fileName));
+                throw new ArgumentException("FileName cannot be empty.", nameof(fileName));
 
-            Id = id;
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("FilePath cannot be empty.", nameof(filePath));
+
+            if (string.IsNullOrWhiteSpace(fileFormat))
+                throw new ArgumentException("FileFormat cannot be empty.", nameof(fileFormat));
+
+            if (string.IsNullOrWhiteSpace(checksum))
+                throw new ArgumentException("Checksum cannot be empty.", nameof(checksum));
+
+            if (sizeBytes < 0)
+                throw new ArgumentOutOfRangeException(nameof(sizeBytes), "SizeBytes cannot be negative.");
+
+
+            Id = Guid.NewGuid();
             FileName = fileName;
-            TakenAt = takenAt;
+            FilePath = filePath;
+            FileFormat = fileFormat;
+            SizeBytes = sizeBytes;
+            Checksum = checksum;
+            DateTaken = dateTaken;
+        }
+
+        public static Photo Create(string fileName, string filePath, string fileFormat, long sizeBytes, string checksum, DateTime? dateTaken = null, IEnumerable<string>? tags = null)
+        {
+            var photo = new Photo(fileName, filePath, fileFormat, sizeBytes, checksum, dateTaken);
+
+            if (tags != null)
+            {
+                foreach (var tagName in tags)
+                    photo.AddTag(tagName);
+            }
+
+            return photo;
         }
 
         // Behaviour: add a tag
-        public void AddTag(string tagText)
+        public void AddTag(string tagName)
         {
-            var tag = new Tag(tagText);
+            var tag = new Tag(tagName);
 
-            if (_tags.Any(t => t.Value.Equals(tag.Value, StringComparison.OrdinalIgnoreCase)))
+            if (_tags.Any(t => t.Name == tag.Name))
                 return; // ignore duplicates within this photo
 
             _tags.Add(tag);
+        }
+
+        public void RemoveTag(string tagName)
+        {
+            var normalized = tagName.Trim().ToLowerInvariant();
+            var existing = _tags.FirstOrDefault(t => t.Name == normalized);
+            if (existing != null)
+            {
+                _tags.Remove(existing);
+            }
         }
     }
 }

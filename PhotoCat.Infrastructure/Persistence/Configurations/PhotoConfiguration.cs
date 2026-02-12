@@ -25,9 +25,30 @@ namespace PhotoCat.Infrastructure.Photos
             .HasMaxLength(255);
 
 
-            builder.Property(p => p.TakenAt)
+            builder.Property(p => p.DateTaken)
             .HasColumnName("taken_at")
             .IsRequired();
+
+            builder.Property(p => p.CreatedAt)
+            .HasColumnName("CreatedAt")
+            .HasDefaultValueSql("GETUTCDATE()")
+            .ValueGeneratedOnAdd();
+
+            builder.Property(p => p.UpdatedAt)
+            .HasColumnName("UpdatedAt")
+            .HasDefaultValueSql("GETUTCDATE()")
+            .ValueGeneratedOnAddOrUpdate();
+
+            builder.OwnsMany(p => p.Tags, tags =>
+            {
+                tags.ToTable("photo_tags");          // table for the collection
+                tags.WithOwner().HasForeignKey("PhotoId");
+                tags.Property(t => t.Name)
+                    .HasColumnName("Name")
+                    .IsRequired()
+                    .HasMaxLength(100);
+                tags.HasKey("PhotoId", "Name");      // composite PK
+            });
 
 
             builder.Navigation(p => p.Tags)

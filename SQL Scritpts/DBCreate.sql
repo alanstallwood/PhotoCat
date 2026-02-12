@@ -60,23 +60,10 @@ CREATE INDEX idx_exif_key ON exif_data(exif_key);
 CREATE INDEX idx_exif_photo_id ON exif_data(photo_id);
 
 -- =========================
--- User tags
--- =========================
-CREATE TABLE tags (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-    name TEXT NOT NULL UNIQUE,
-    description TEXT NULL,
-
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
--- =========================
 -- Photo ↔ Tag relationship
 -- =========================
 CREATE TABLE photo_tags (
     photo_id UUID NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
-    tag_id UUID NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
 
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 

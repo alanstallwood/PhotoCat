@@ -4,21 +4,16 @@ using System.Text;
 
 namespace PhotoCat.Domain.Photos
 {
-    public sealed class Tag
+    public sealed record Tag
     {
-        public string Value { get; }
+        public string Name { get; }
 
-        public Tag(string value)
+        public Tag(string name)
         {
-            if (string.IsNullOrWhiteSpace(value))
-                throw new ArgumentException("Tag cannot be empty", nameof(value));
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Tag cannot be empty", nameof(name));
 
-            Value = value.Trim().ToLowerInvariant(); // normalisation
+            Name = name.Trim().ToLowerInvariant(); // normalisation
         }
-
-        public override bool Equals(object? obj)
-            => obj is Tag other && Value == other.Value;
-
-        public override int GetHashCode() => Value.GetHashCode();
     }
 }
