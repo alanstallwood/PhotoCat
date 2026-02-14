@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace PhotoCat.Domain.Photos
+﻿namespace PhotoCat.Domain.Photos
 {
-    public sealed class ExposureInfo
+    public sealed class ExposureInfo(string? iso, decimal? aperture, string? shutterSpeed, decimal? focalLength)
     {
-        int? Iso { get; set; }
-        decimal? Apertuere { get; set; }
-        string? ShutterSpeed { get; set; }
-        decimal? FocalLength { get; set; }
+        string? Iso { get; set; } = iso;
+        decimal? Apertuere { get; set; } = aperture;
+        string? ShutterSpeed { get; set; } = shutterSpeed;
+        decimal? FocalLength { get; set; } = focalLength;
     }
 }

@@ -15,7 +15,7 @@
         public Dimensions? Dimensions { get; private set; }
         public GeoLocation? Location { get; private set; }
 
-        public ExifData? RawExif { get; private set; }
+        public IReadOnlyDictionary<string, string>? RawExif { get; init; }
 
         // Tags are a value object collection
         private readonly List<Tag> _tags = [];
@@ -31,7 +31,7 @@
         // EF needs a private constructor
         private Photo() { }
 
-        private Photo(string fileName, string filePath, string fileFormat, long sizeBytes, string checksum, DateTime? dateTaken = null, CameraInfo? cameraInfo = null, ExposureInfo? exposureInfo = null, Dimensions? dimensions = null, GeoLocation? geoLocation = null, ExifData? rawExif = null)
+        private Photo(string fileName, string filePath, string fileFormat, long sizeBytes, string checksum, PhotoMetadata? metadata = null)
         {
             if (string.IsNullOrWhiteSpace(fileName))
                 throw new ArgumentException("FileName cannot be empty.", nameof(fileName));
@@ -55,17 +55,17 @@
             FileFormat = fileFormat;
             SizeBytes = sizeBytes;
             Checksum = checksum;
-            DateTaken = dateTaken;
-            Camera = cameraInfo;
-            Exposure = exposureInfo;
-            Dimensions = dimensions;
-            Location = geoLocation;
-            RawExif = rawExif ?? ExifData.Empty;
+            DateTaken = metadata?.DateTaken;
+            Camera = metadata?.Camera;
+            Exposure = metadata?.Exposure;
+            Dimensions = metadata?.Dimensions;
+            Location = metadata?.Location;
+            RawExif = metadata?.RawExif;
         }
 
-        public static Photo Create(string fileName, string filePath, string fileFormat, long sizeBytes, string checksum, DateTime? dateTaken = null, IEnumerable<string>? tags = null, IDictionary<string, string>? rawExif = null)
+        public static Photo Create(string fileName, string filePath, string fileFormat, long sizeBytes, string checksum, IEnumerable<string>? tags = null, PhotoMetadata? metadata = null)
         {
-            var photo = new Photo(fileName, filePath, fileFormat, sizeBytes, checksum, dateTaken);
+            var photo = new Photo(fileName, filePath, fileFormat, sizeBytes, checksum, metadata);
 
             if (tags != null)
             {

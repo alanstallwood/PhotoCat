@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace PhotoCat.Domain.Photos
+﻿namespace PhotoCat.Domain.Photos
 {
-    public sealed class Dimensions
+    public sealed class Dimensions(int? width, int? height, int? orientation)
     {
-        int Width { get; set; }
-        int Height { get; set; }
+        int? Width { get; set; } = width;
+        int? Height { get; set; } = height;
+        int? Orientation { get; set; } = orientation;
     }
 }

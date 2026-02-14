@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace PhotoCat.Domain.Photos
+﻿namespace PhotoCat.Domain.Photos
 {
-    public sealed class CameraInfo
+    public sealed class CameraInfo(string? make, string? model, string? lens)
     {
-        string Make { get; set; }
-        string Model { get; set; }
-        string? Lens { get; set; }
+        string? Make { get; set; } = make;
+        string? Model { get; set; } = model;
+        string? Lens { get; set; } = lens;
     }
 }
