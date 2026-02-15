@@ -29,7 +29,7 @@ CREATE TABLE photos (
     file_format TEXT NULL,
     size_bytes BIGINT NOT NULL,
 
-    checksum TEXT NOT NULL,
+    checksum BYTEA NOT NULL,
 
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -41,23 +41,6 @@ CREATE TABLE photos (
 CREATE INDEX idx_photos_date_taken ON photos(date_taken);
 CREATE INDEX idx_photos_import_batch ON photos(import_batch_id);
 
--- =========================
--- Exif metadata
--- =========================
-CREATE TABLE exif_data (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    photo_id UUID NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
-
-    exif_key TEXT NOT NULL,
-    exif_value TEXT NULL,
-
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-
-    CONSTRAINT uq_exif_photo_key UNIQUE (photo_id, exif_key)
-);
-
-CREATE INDEX idx_exif_key ON exif_data(exif_key);
-CREATE INDEX idx_exif_photo_id ON exif_data(photo_id);
 
 -- =========================
 -- Photo ↔ Tag relationship

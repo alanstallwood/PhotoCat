@@ -2,13 +2,13 @@
 {
     public sealed class Photo
     {
-        public Guid Id { get; private set; }
+        public Guid Id { get; set; }
         public string FileName { get; private set; } = null!;
         public string FilePath { get; private set; } = null!;
         public DateTime? DateTaken { get; private set; }
-        public string FileFormat { get; private set; } = null!;
-        public long SizeBytes { get; private set; }
-        public string Checksum { get; private set; } = null!;
+        public string? FileFormat { get; private set; } = null!;
+        public long? SizeBytes { get; private set; }
+        public byte[] Checksum { get; private set; } = null!;
 
         public CameraInfo? Camera { get; private set; } = null!;
         public ExposureInfo? Exposure { get; private set; }
@@ -31,7 +31,7 @@
         // EF needs a private constructor
         private Photo() { }
 
-        private Photo(string fileName, string filePath, string fileFormat, long sizeBytes, string checksum, PhotoMetadata? metadata = null)
+        private Photo(string fileName, string filePath, string fileFormat, long sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
         {
             if (string.IsNullOrWhiteSpace(fileName))
                 throw new ArgumentException("FileName cannot be empty.", nameof(fileName));
@@ -42,7 +42,7 @@
             if (string.IsNullOrWhiteSpace(fileFormat))
                 throw new ArgumentException("FileFormat cannot be empty.", nameof(fileFormat));
 
-            if (string.IsNullOrWhiteSpace(checksum))
+            if (checksum is null || checksum.Length == 0)
                 throw new ArgumentException("Checksum cannot be empty.", nameof(checksum));
 
             if (sizeBytes < 0)
@@ -63,7 +63,7 @@
             RawExif = metadata?.RawExif;
         }
 
-        public static Photo Create(string fileName, string filePath, string fileFormat, long sizeBytes, string checksum, IEnumerable<string>? tags = null, PhotoMetadata? metadata = null)
+        public static Photo Create(string fileName, string filePath, string fileFormat, long sizeBytes, byte[] checksum, IEnumerable<string>? tags = null, PhotoMetadata? metadata = null)
         {
             var photo = new Photo(fileName, filePath, fileFormat, sizeBytes, checksum, metadata);
 

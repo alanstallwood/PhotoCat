@@ -1,29 +1,32 @@
 ﻿using PhotoCat.Application.Photos.AddPhoto;
 using PhotoCat.Domain.Photos;
 using PhotoCat.Infrastructure.Metadata;
+using PhotoCat.Infrastructure.Photos;
 
 namespace PhotoCat.Application.Photos;
 
 public sealed class AddPhotoHandler
 {
     private readonly IExifExtractor _exifExtractor;
+    private readonly IChecksumService _checksumService;
     private readonly IPhotoRepository _photoRepository;
-    private readonly IUnitOfWork _unitOfWork;
 
-    public AddPhotoHandler(IExifExtractor exifExtractor, IPhotoRepository photoRepository, IUnitOfWork unitOfWork)
+    public AddPhotoHandler(IExifExtractor exifExtractor, IChecksumService checksumService, IPhotoRepository photoRepository)
     {
         _exifExtractor = exifExtractor;
+        _checksumService = checksumService;
         _photoRepository = photoRepository;
-        _unitOfWork = unitOfWork;
     }
 
-    public async Task<Guid> Handle(AddPhotoCommand command, CancellationToken ct = default)
+    public async Task<AddPhotoResult> Handle(AddPhotoCommand command, CancellationToken ct = default)
     {
         if (!File.Exists(command.FilePath))
             throw new FileNotFoundException(
                 $"File not found: {command.FilePath}");
 
-        var metadata = _exifExtractor.Extract(command.FilePath); 
+        var metadata = _exifExtractor.Extract(command.FilePath);
+
+        var hash = await _checksumService.CalculateAsync(command.FilePath, ct);
 
         // Create the aggregate using the factory
         var photo = Photo.Create(
@@ -31,16 +34,12 @@ public sealed class AddPhotoHandler
             command.FilePath,
             command.FileFormat,
             command.SizeBytes,
-            command.Checksum,
+            hash,
             command.Tags,
             metadata);
 
-        // Add to repository
-        await _photoRepository.AddAsync(photo, ct);
+        var result = await _photoRepository.InsertOrGetPhotoAsync(photo, ct);
 
-        // Commit transaction / save changes
-        await _unitOfWork.SaveChangesAsync(ct);
-
-        return photo.Id; // return the new ID if needed
+        return result;
     }
 }

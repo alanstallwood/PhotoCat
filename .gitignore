@@ -20,3 +20,7 @@
 /PhotoCat.Application/obj/PhotoCat.Application.csproj.nuget.dgspec.json
 /PhotoCat.Domain/bin/Debug/net10.0
 /PhotoCat.Infrastructure/bin/Debug/net10.0
+/PhotoCat.Application/obj/Debug/net10.0/PhotoCat.Application.assets.cache
+/PhotoCat.Application/obj/Debug/net10.0/PhotoCat.Application.GeneratedMSBuildEditorConfig.editorconfig
+/PhotoCat.Application/obj/PhotoCat.Application.csproj.nuget.g.targets
+/PhotoCat.Application/obj/project.assets.json
