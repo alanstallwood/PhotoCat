@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Geometries;
 using Npgsql;
 using PhotoCat.Application.Photos;
 using PhotoCat.Domain.Photos;
+using PhotoCat.Infrastructure.Persistence.Enities;
 
 
 namespace PhotoCat.Infrastructure.Photos;
@@ -28,6 +30,7 @@ public sealed class PhotoRepository : IPhotoRepository
     Photo photo,
     CancellationToken ct)
     {
+        var record = MapPhotoRecord(photo);
         var sql = @"
         INSERT INTO photos (file_name, file_path, date_taken, file_format, size_bytes, checksum)
         VALUES (@filaname, @filepath, @dateTaken, @fileFormat, @sizeBytes, @checksum)
@@ -46,9 +49,35 @@ public sealed class PhotoRepository : IPhotoRepository
                 new NpgsqlParameter("checksum", photo.Checksum)                )
             .SingleAsync(ct);
 
-        photo.Id = dbResult.Id;
 
         return new AddPhotoResult(dbResult.Id, dbResult.Inserted, photo);
     }
 
+    private PhotoRecord MapPhotoRecord(Photo photo)
+    {
+        return new PhotoRecord
+        {
+            Id = photo.Id,
+            FileName = photo.FileName,
+            FilePath = photo.FilePath,
+            DateTaken = photo.DateTaken,
+            FileFormat = photo.FileFormat,
+            SizeBytes = photo.SizeBytes,
+            Checksum = photo.Checksum,
+            CameraMake = photo.Camera?.Make,
+            CameraModel = photo.Camera?.Model,
+            CameraLens = photo.Camera?.Lens,
+            ExposureIso = photo.Exposure?.Iso,
+            ExposureFNumber = photo.Exposure?.FNumber,
+            ExposureTime = photo.Exposure?.Time,
+            ExposureFocalLength = photo.Exposure?.FocalLength,
+            Width = photo.Dimensions?.Width,
+            Height = photo.Dimensions?.Height,
+            Orientation = photo.Dimensions?.Orientation,
+            Location = photo.Location != null && photo.Location.Longitude.HasValue && photo.Location.Latitude.HasValue ? new Point(photo.Location.Longitude.Value, photo.Location.Latitude.Value) : null,
+            Altitude = photo.Location?.Altitude,
+            RawExifJson = photo.RawExif != null ? System.Text.Json.JsonSerializer.Serialize(photo.RawExif) : null
+        };        
+            
+    }
 }

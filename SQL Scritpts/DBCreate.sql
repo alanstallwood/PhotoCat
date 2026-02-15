@@ -30,6 +30,20 @@ CREATE TABLE photos (
     size_bytes BIGINT NOT NULL,
 
     checksum BYTEA NOT NULL,
+	
+	camera_make TEXT NULL,
+	camera_model TEXT NULL,
+	camera_lens TEXT NULL,
+	exposure_iso TEXT NULL,
+	exposure_fnumber NUMERIC NULL,
+	exposure_time TEXT NULL,
+	exposure_focallength NUMERIC NULL,
+	width INT NULL,
+	height INT NULL,
+	orientation INT NULL,
+	location GEOGRAPHY(POINT, 4326) NULL,
+	altitude DOUBLE NULL,
+	raw_exif JSONB DEFAULT '{}'::JSONB,
 
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),

@@ -1,12 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PhotoCat.Domain.Photos;
+using PhotoCat.Infrastructure.Persistence.Enities;
 
 namespace PhotoCat.Infrastructure.Photos
 {
-    public sealed class PhotoConfiguration : IEntityTypeConfiguration<Photo>
+    public sealed class PhotoConfiguration : IEntityTypeConfiguration<PhotoRecord>
     {
-        public void Configure(EntityTypeBuilder<Photo> builder)
+        public void Configure(EntityTypeBuilder<PhotoRecord> builder)
         {
             builder.ToTable("photos");
 
@@ -24,10 +25,39 @@ namespace PhotoCat.Infrastructure.Photos
             .IsRequired()
             .HasMaxLength(255);
 
+            builder.Property(p => p.FilePath)
+                .HasColumnName("file_path")
+                .IsRequired();
 
             builder.Property(p => p.DateTaken)
-            .HasColumnName("taken_at")
-            .IsRequired();
+                .HasColumnName("taken_at");
+
+            builder.Property(p => p.FileFormat)
+                .HasColumnName("file_format");
+
+            builder.Property(p => p.SizeBytes)
+                .HasColumnName("size_bytes");
+
+            builder.Property(p => p.Checksum)
+                .HasColumnName("checksum")
+                .IsRequired()
+                .HasMaxLength(32);
+
+            // CameraInfo columns
+            builder.Property(p => p.CameraMake);
+            builder.Property(p => p.CameraModel);
+            builder.Property(p => p.CameraLens);
+
+            // ExposureInfo columns
+            builder.Property(p => p.ExposureIso);
+            builder.Property(p => p.ExposureFNumber).HasColumnType("numeric");
+            builder.Property(p => p.ExposureTime);
+            builder.Property(p => p.ExposureFocalLength).HasColumnType("numeric");
+
+            // Dimensions columns
+            builder.Property(p => p.Width);
+            builder.Property(p => p.Height);
+            builder.Property(p => p.Orientation);
 
             builder.Property(p => p.CreatedAt)
             .HasColumnName("CreatedAt")

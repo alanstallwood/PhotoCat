@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   postgres:
-    image: postgres:16-alpine
+    build: .
     restart: unless-stopped
 
     # IMPORTANT on 512MB RAM
@@ -15,6 +15,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
 
     volumes:
+      - /volume1/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf
       - /volume1/postgres/data:/var/lib/postgresql/data
       - /volume1/postgres/postgresql.conf:/etc/postgresql/postgresql.conf
 

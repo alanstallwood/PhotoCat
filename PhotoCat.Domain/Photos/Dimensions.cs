@@ -2,8 +2,8 @@
 {
     public sealed class Dimensions(int? width, int? height, int? orientation)
     {
-        int? Width { get; set; } = width;
-        int? Height { get; set; } = height;
-        int? Orientation { get; set; } = orientation;
+        public int? Width { get; set; } = width;
+        public int? Height { get; set; } = height;
+        public int? Orientation { get; set; } = orientation;
     }
 }
