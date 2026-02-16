@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   postgres:
-    build: .
+    image: imresamu/postgis-arm64:15-3.5.4-alpine3.22-ver20251223-6b15838-2026w06
     restart: unless-stopped
 
     # IMPORTANT on 512MB RAM
@@ -15,11 +15,14 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
 
     volumes:
-      - /volume1/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf
       - /volume1/postgres/data:/var/lib/postgresql/data
       - /volume1/postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - /volume1/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf      
 
-    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    command: >
+        postgres 
+        -c config_file=/etc/postgresql/postgresql.conf
+        -c hba_file=/etc/postgresql/pg_hba.conf
     
     ports:
       - "15432:5432"

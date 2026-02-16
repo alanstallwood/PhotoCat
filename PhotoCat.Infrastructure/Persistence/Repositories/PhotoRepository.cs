@@ -26,14 +26,18 @@ public sealed class PhotoRepository : IPhotoRepository
     .FirstOrDefaultAsync(p => p.Id == id, ct);
 
 
-    public async Task<AddPhotoResult> InsertOrGetPhotoAsync(
+    public async Task<AddPhotoResult> AddIfNotExistsAsync(
     Photo photo,
     CancellationToken ct)
     {
         var record = MapPhotoRecord(photo);
         var sql = @"
-        INSERT INTO photos (file_name, file_path, date_taken, file_format, size_bytes, checksum)
-        VALUES (@filaname, @filepath, @dateTaken, @fileFormat, @sizeBytes, @checksum)
+        INSERT INTO photos (id, file_name, file_path, date_taken, file_format, size_bytes, checksum, camera_make, camera_model,
+        camera_lens, exposure_iso, exposure_fnumber, exposure_time, exposure_focallength, width, height, orientation, location, 
+        altitude, raw_exif)
+        VALUES (@id, @filaname, @filepath, @dateTaken, @fileFormat, @sizeBytes, @checksum, @cameraMake, @cameraModel,
+        @cameraLens, @exposureIso, @exposureFnumber, @exposureTime, @exposureFocallength, @width, @height, @orientation, @location,
+        @altiude, @rawExif)
         ON CONFLICT (checksum)
         DO UPDATE SET checksum = EXCLUDED.checksum
         RETURNING id, (xmax = 0) AS inserted;
@@ -41,19 +45,33 @@ public sealed class PhotoRepository : IPhotoRepository
 
         var dbResult = await _db.Database
             .SqlQueryRaw<AddPhotoResult>(sql,
-                new NpgsqlParameter("filaname", photo.FileName),
-                new NpgsqlParameter("filepath", photo.FilePath),
-                new NpgsqlParameter("dateTaken", photo.DateTaken ?? (object)DBNull.Value),
-                new NpgsqlParameter("fileFormat", photo.FileFormat ?? (object)DBNull.Value),
-                new NpgsqlParameter("sizeBytes", photo.SizeBytes ?? (object)DBNull.Value),
-                new NpgsqlParameter("checksum", photo.Checksum)                )
+                new NpgsqlParameter("id", record.Id),
+                new NpgsqlParameter("filaname", record.FileName),
+                new NpgsqlParameter("filepath", record.FilePath),
+                new NpgsqlParameter("dateTaken", record.DateTaken ?? (object)DBNull.Value),
+                new NpgsqlParameter("fileFormat", record.FileFormat ?? (object)DBNull.Value),
+                new NpgsqlParameter("sizeBytes", record.SizeBytes ?? (object)DBNull.Value),
+                new NpgsqlParameter("checksum", record.Checksum),
+                new NpgsqlParameter("cameraMake", record.CameraMake ?? (object)DBNull.Value),
+                new NpgsqlParameter("cameraModel", record.CameraModel ?? (object)DBNull.Value),
+                new NpgsqlParameter("cameraLens", record.CameraLens ?? (object)DBNull.Value),
+                new NpgsqlParameter("exposureIso", record.ExposureIso ?? (object)DBNull.Value),
+                new NpgsqlParameter("exposureFnumber", record.ExposureFNumber ?? (object)DBNull.Value),
+                new NpgsqlParameter("exposureTime", record.ExposureTime ?? (object)DBNull.Value),
+                new NpgsqlParameter("exposureFocallength", record.ExposureFocalLength ?? (object)DBNull.Value),
+                new NpgsqlParameter("width", record.Width ?? (object)DBNull.Value),
+                new NpgsqlParameter("height", record.Height ?? (object)DBNull.Value),
+                new NpgsqlParameter("orientation", record.Orientation ?? (object)DBNull.Value),
+                new NpgsqlParameter("location", record.Location ?? (object)DBNull.Value),
+                new NpgsqlParameter("altiude", record.Altitude ?? (object)DBNull.Value),
+                new NpgsqlParameter("rawExif", record.RawExifJson ?? (object)DBNull.Value)
+                )
             .SingleAsync(ct);
 
-
-        return new AddPhotoResult(dbResult.Id, dbResult.Inserted, photo);
+        return new AddPhotoResult(dbResult.Id, dbResult.Inserted);
     }
 
-    private PhotoRecord MapPhotoRecord(Photo photo)
+    private static PhotoRecord MapPhotoRecord(Photo photo)
     {
         return new PhotoRecord
         {

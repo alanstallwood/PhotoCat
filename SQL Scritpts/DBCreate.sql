@@ -42,7 +42,7 @@ CREATE TABLE photos (
 	height INT NULL,
 	orientation INT NULL,
 	location GEOGRAPHY(POINT, 4326) NULL,
-	altitude DOUBLE NULL,
+	altitude DOUBLE PRECISION NULL,
 	raw_exif JSONB DEFAULT '{}'::JSONB,
 
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -60,13 +60,10 @@ CREATE INDEX idx_photos_import_batch ON photos(import_batch_id);
 -- Photo ↔ Tag relationship
 -- =========================
 CREATE TABLE photo_tags (
-    photo_id UUID NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
-
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-
-    PRIMARY KEY (photo_id, tag_id)
+    "photo_id" uuid NOT NULL,
+    "name" varchar(100) NOT NULL,
+    PRIMARY KEY ("photo_id", "name"),
+    CONSTRAINT fk_photo FOREIGN KEY ("photo_id") REFERENCES photos("id") ON DELETE CASCADE
 );
-
-CREATE INDEX idx_photo_tags_tag_id ON photo_tags(tag_id);
 
 COMMIT;

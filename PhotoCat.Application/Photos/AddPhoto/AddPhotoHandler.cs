@@ -38,7 +38,7 @@ public sealed class AddPhotoHandler
             command.Tags,
             metadata);
 
-        var result = await _photoRepository.InsertOrGetPhotoAsync(photo, ct);
+        var result = await _photoRepository.AddIfNotExistsAsync(photo, ct);
 
         return result;
     }

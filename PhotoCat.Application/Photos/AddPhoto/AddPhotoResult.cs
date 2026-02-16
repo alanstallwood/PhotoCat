@@ -4,7 +4,6 @@ namespace PhotoCat.Infrastructure.Photos
 {
     public record AddPhotoResult(
         Guid Id,
-        bool Inserted,
-        Photo Photo);
+        bool Inserted);
 }
   

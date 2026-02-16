@@ -39,9 +39,6 @@
             if (string.IsNullOrWhiteSpace(filePath))
                 throw new ArgumentException("FilePath cannot be empty.", nameof(filePath));
 
-            if (string.IsNullOrWhiteSpace(fileFormat))
-                throw new ArgumentException("FileFormat cannot be empty.", nameof(fileFormat));
-
             if (checksum is null || checksum.Length == 0)
                 throw new ArgumentException("Checksum cannot be empty.", nameof(checksum));
 
