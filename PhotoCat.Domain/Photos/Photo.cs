@@ -1,4 +1,7 @@
-﻿namespace PhotoCat.Domain.Photos
+﻿using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("PhotoCat.Infrastructure")]
+namespace PhotoCat.Domain.Photos
 {
     public sealed class Photo
     {
@@ -6,7 +9,7 @@
         public string FileName { get; private set; } = null!;
         public string FilePath { get; private set; } = null!;
         public DateTime? DateTaken { get; private set; }
-        public string? FileFormat { get; private set; } = null!;
+        public PhotoFileType FileFormat { get; private set; }
         public long? SizeBytes { get; private set; }
         public byte[] Checksum { get; private set; } = null!;
 
@@ -31,7 +34,7 @@
         // EF needs a private constructor
         private Photo() { }
 
-        private Photo(string fileName, string filePath, string fileFormat, long sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
+        private Photo(string fileName, string filePath, PhotoFileType fileFormat, long? sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
         {
             if (string.IsNullOrWhiteSpace(fileName))
                 throw new ArgumentException("FileName cannot be empty.", nameof(fileName));
@@ -60,7 +63,7 @@
             RawExif = metadata?.RawExif;
         }
 
-        public static Photo Create(string fileName, string filePath, string fileFormat, long sizeBytes, byte[] checksum, IEnumerable<string>? tags = null, PhotoMetadata? metadata = null)
+        public static Photo Create(string fileName, string filePath, PhotoFileType fileFormat, long? sizeBytes, byte[] checksum, IEnumerable<string>? tags = null, PhotoMetadata? metadata = null)
         {
             var photo = new Photo(fileName, filePath, fileFormat, sizeBytes, checksum, metadata);
 
@@ -71,6 +74,43 @@
             }
 
             return photo;
+        }
+
+        internal Photo(
+        Guid id,
+        string fileName,
+        string filePath,
+        PhotoFileType fileFormat,
+        long? sizeBytes,
+        byte[] checksum,
+        DateTime? dateTaken,
+        CameraInfo? camera,
+        ExposureInfo? exposure,
+        Dimensions? dimensions,
+        GeoLocation? location,
+        IReadOnlyDictionary<string, string>? rawExif,
+        IEnumerable<Tag>? tags,
+        DateTime createdAt,
+        DateTime updatedAt)
+        {
+            Id = id;
+            FileName = fileName;
+            FilePath = filePath;
+            FileFormat = fileFormat;
+            SizeBytes = sizeBytes;
+            Checksum = checksum;
+            DateTaken = dateTaken;
+            Camera = camera;
+            Exposure = exposure;
+            Dimensions = dimensions;
+            Location = location;
+            RawExif = rawExif;
+
+            if (tags != null)
+                _tags.AddRange(tags);
+
+            CreatedAt = createdAt;
+            UpdatedAt = updatedAt;
         }
 
         // Behaviour: add a tag

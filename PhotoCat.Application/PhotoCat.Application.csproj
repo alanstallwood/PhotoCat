@@ -12,6 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PhotoCat.Domain\PhotoCat.Domain.csproj" />
-  </ItemGroup>
+  </ItemGroup>	
 
 </Project>

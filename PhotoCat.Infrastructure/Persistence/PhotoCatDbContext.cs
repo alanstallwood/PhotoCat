@@ -1,13 +1,12 @@
-﻿using System.Reflection.Emit;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using PhotoCat.Application;
-using PhotoCat.Domain.Photos;
+using PhotoCat.Infrastructure.Persistence.Enities;
 
 namespace PhotoCat.Infrastructure
 {
     public sealed class PhotoCatDbContext : DbContext, IUnitOfWork
     {
-        public DbSet<Photo> Photos => Set<Photo>();
+        public DbSet<PhotoRecord> Photos => Set<PhotoRecord>();
 
 
         public PhotoCatDbContext(DbContextOptions<PhotoCatDbContext> options)

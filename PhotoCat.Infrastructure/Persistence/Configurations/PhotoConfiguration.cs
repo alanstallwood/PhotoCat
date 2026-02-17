@@ -33,7 +33,8 @@ namespace PhotoCat.Infrastructure.Photos
                 .HasColumnName("taken_at");
 
             builder.Property(p => p.FileFormat)
-                .HasColumnName("file_format");
+                .HasColumnName("file_format")
+                 .HasConversion<string>();
 
             builder.Property(p => p.SizeBytes)
                 .HasColumnName("size_bytes");
@@ -42,6 +43,9 @@ namespace PhotoCat.Infrastructure.Photos
                 .HasColumnName("checksum")
                 .IsRequired()
                 .HasMaxLength(32);
+
+            builder.HasIndex(p => p.Checksum)
+                .IsUnique();
 
             // CameraInfo columns
             builder.Property(p => p.CameraMake);

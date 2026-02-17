@@ -11,7 +11,7 @@ namespace PhotoCat.Infrastructure.Persistence.Enities
         public string FilePath { get; set; } = null!;
         public DateTime? DateTaken { get; set; }
 
-        public string? FileFormat { get; set; } = null!;
+        public PhotoFileType FileFormat { get; set; }
         public long? SizeBytes { get; set; }
         public byte[] Checksum { get; set; } = null!;
 

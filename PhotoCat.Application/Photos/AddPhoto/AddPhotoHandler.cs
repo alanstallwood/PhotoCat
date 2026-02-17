@@ -1,4 +1,5 @@
-﻿using PhotoCat.Application.Photos.AddPhoto;
+﻿using PhotoCat.Application.Interfaces;
+using PhotoCat.Application.Photos.AddPhoto;
 using PhotoCat.Domain.Photos;
 using PhotoCat.Infrastructure.Metadata;
 using PhotoCat.Infrastructure.Photos;
@@ -9,37 +10,52 @@ public sealed class AddPhotoHandler
 {
     private readonly IExifExtractor _exifExtractor;
     private readonly IChecksumService _checksumService;
+    private readonly IFileTypeDetector _fileTypeDetector;
     private readonly IPhotoRepository _photoRepository;
 
-    public AddPhotoHandler(IExifExtractor exifExtractor, IChecksumService checksumService, IPhotoRepository photoRepository)
+    public AddPhotoHandler(IExifExtractor exifExtractor, IChecksumService checksumService, IFileTypeDetector fileTypeDetector, IPhotoRepository photoRepository)
     {
         _exifExtractor = exifExtractor;
         _checksumService = checksumService;
+        _fileTypeDetector = fileTypeDetector;
         _photoRepository = photoRepository;
     }
 
     public async Task<AddPhotoResult> Handle(AddPhotoCommand command, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(command.FilePath))
+            throw new ArgumentException("FilePath is required.");
+
         if (!File.Exists(command.FilePath))
             throw new FileNotFoundException(
                 $"File not found: {command.FilePath}");
 
+        var checksum = await _checksumService.CalculateAsync(command.FilePath, ct);
+        var existing = await _photoRepository
+            .GetByChecksumAsync(checksum, ct);
+
+        if (existing is not null)
+        {
+            return AddPhotoResult.AlreadyExists(existing.Id);
+        }
+
+        var fileInfo = new FileInfo(command.FilePath);
+        var fileType = _fileTypeDetector.Detect(command.FilePath);
         var metadata = _exifExtractor.Extract(command.FilePath);
 
-        var hash = await _checksumService.CalculateAsync(command.FilePath, ct);
 
         // Create the aggregate using the factory
         var photo = Photo.Create(
-            command.FileName,
+            fileInfo.Name,
             command.FilePath,
-            command.FileFormat,
-            command.SizeBytes,
-            hash,
+            fileType,
+            fileInfo.Length,
+            checksum,
             command.Tags,
             metadata);
 
-        var result = await _photoRepository.AddIfNotExistsAsync(photo, ct);
+        var result = await _photoRepository.AddAsync(photo, ct);
 
-        return result;
+        return AddPhotoResult.Created(photo.Id);
     }
 }
