@@ -24,6 +24,14 @@ namespace PhotoCat.Infrastructure.Metadata
             var dateStr = GetValue(exif, "Date/Time Original") ??
                           GetValue(exif, "DateTimeOriginal");
 
+            if (DateTime.TryParseExact(
+                    dateStr,
+                    ["yyyy:MM:dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss"],
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeLocal,
+                    out var exifDate))
+                return exifDate;
+
             if (DateTime.TryParse(dateStr, out var date))
                 return date;
 
@@ -105,10 +113,24 @@ namespace PhotoCat.Infrastructure.Metadata
 
         private static string? GetValue(IDictionary<string, string> exif, string key)
         {
-            return exif.TryGetValue(key, out var value) &&
-                   !string.IsNullOrWhiteSpace(value)
-                ? value
-                : null;
+            if (exif.TryGetValue(key, out var value) &&
+                !string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+
+            foreach (var kvp in exif)
+            {
+                if (!kvp.Key.EndsWith($":{key}", StringComparison.OrdinalIgnoreCase) ||
+                    string.IsNullOrWhiteSpace(kvp.Value))
+                {
+                    continue;
+                }
+
+                return kvp.Value;
+            }
+
+            return null;
         }
 
     }

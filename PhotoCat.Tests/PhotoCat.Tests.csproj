@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\PhotoCat.Application\PhotoCat.Application.csproj" />
     <ProjectReference Include="..\PhotoCat.Domain\PhotoCat.Domain.csproj" />
+    <ProjectReference Include="..\PhotoCat.Infrastructure\PhotoCat.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
