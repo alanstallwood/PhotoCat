@@ -133,5 +133,15 @@ namespace PhotoCat.Domain.Photos
                 _tags.Remove(existing);
             }
         }
+
+        public void SetRepresentativeDerivative()
+        {
+            //TODO: Placeholder for logic to set a representative derivative
+        }
+
+        public void MarkDeleted()
+        {
+            //TODO: Placeholder for soft delete logic
+        }
     }
 }

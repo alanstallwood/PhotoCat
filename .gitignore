@@ -24,3 +24,5 @@
 /PhotoCat.Application/obj/Debug/net10.0/PhotoCat.Application.GeneratedMSBuildEditorConfig.editorconfig
 /PhotoCat.Application/obj/PhotoCat.Application.csproj.nuget.g.targets
 /PhotoCat.Application/obj/project.assets.json
+/PhotoCat.Tests/bin/Debug/net10.0
+/PhotoCat.Tests/obj
