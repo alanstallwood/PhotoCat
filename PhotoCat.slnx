@@ -3,4 +3,5 @@
   <Project Path="PhotoCat.Domain/PhotoCat.Domain.csproj" />
   <Project Path="PhotoCat.Infrastructure/PhotoCat.Infrastructure.csproj" Id="92440d59-e34b-4f20-89e3-705c2d061a6d" />
   <Project Path="PhotoCat.UI.BlazorServer/PhotoCat.UI.BlazorServer.csproj" Id="fdeb24c0-5050-4dd4-b167-851391323d4c" />
+  <Project Path="PhotoCat.Tests/PhotoCat.Tests.csproj" />
 </Solution>
