@@ -48,40 +48,52 @@ namespace PhotoCat.Infrastructure.Photos
                 .IsUnique();
 
             // CameraInfo columns
-            builder.Property(p => p.CameraMake);
-            builder.Property(p => p.CameraModel);
-            builder.Property(p => p.CameraLens);
+            builder.Property(p => p.CameraMake)
+                .HasColumnName("camera_make");
+            builder.Property(p => p.CameraModel)
+                .HasColumnName("camera_model");
+            builder.Property(p => p.CameraLens)
+                .HasColumnName("camera_lens");
 
             // ExposureInfo columns
-            builder.Property(p => p.ExposureIso);
-            builder.Property(p => p.ExposureFNumber).HasColumnType("numeric");
-            builder.Property(p => p.ExposureTime);
-            builder.Property(p => p.ExposureFocalLength).HasColumnType("numeric");
+            builder.Property(p => p.ExposureIso)
+                .HasColumnName("exposure_iso");
+            builder.Property(p => p.ExposureFNumber)
+                .HasColumnName("exposure_fnumber")
+                .HasColumnType("numeric");
+            builder.Property(p => p.ExposureTime)
+                .HasColumnName("exposure_time");
+            builder.Property(p => p.ExposureFocalLength)
+                .HasColumnName("exposure_focallength")
+                .HasColumnType("numeric");
 
             // Dimensions columns
-            builder.Property(p => p.Width);
-            builder.Property(p => p.Height);
-            builder.Property(p => p.Orientation);
+            builder.Property(p => p.Width)
+                .HasColumnName("width");
+            builder.Property(p => p.Height)
+                .HasColumnName("height");
+            builder.Property(p => p.Orientation)
+                .HasColumnName("orientation");
 
             builder.Property(p => p.CreatedAt)
-            .HasColumnName("CreatedAt")
+            .HasColumnName("created_at")
             .HasDefaultValueSql("GETUTCDATE()")
             .ValueGeneratedOnAdd();
 
             builder.Property(p => p.UpdatedAt)
-            .HasColumnName("UpdatedAt")
+            .HasColumnName("updated_at")
             .HasDefaultValueSql("GETUTCDATE()")
             .ValueGeneratedOnAddOrUpdate();
 
             builder.OwnsMany(p => p.Tags, tags =>
             {
                 tags.ToTable("photo_tags");          // table for the collection
-                tags.WithOwner().HasForeignKey("PhotoId");
+                tags.WithOwner().HasForeignKey("photo_id");
                 tags.Property(t => t.Name)
-                    .HasColumnName("Name")
+                    .HasColumnName("name")
                     .IsRequired()
                     .HasMaxLength(100);
-                tags.HasKey("PhotoId", "Name");      // composite PK
+                tags.HasKey("photo_id", "Name");      // composite PK
             });
 
 
