@@ -78,7 +78,7 @@ public sealed class PhotoRepository(PhotoCatDbContext db) : IPhotoRepository
             FileName = photo.FileName,
             FilePath = photo.FilePath,
             DateTaken = photo.DateTaken,
-            FileFormat = photo.FileFormat,
+            FileFormat = photo.FileType,
             SizeBytes = photo.SizeBytes,
             Checksum = photo.Checksum,
             CameraMake = photo.Camera?.Make,

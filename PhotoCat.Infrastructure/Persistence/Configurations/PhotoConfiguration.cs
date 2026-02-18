@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using PhotoCat.Domain.Photos;
 using PhotoCat.Infrastructure.Persistence.Enities;
 
 namespace PhotoCat.Infrastructure.Photos
@@ -11,41 +10,14 @@ namespace PhotoCat.Infrastructure.Photos
         {
             builder.ToTable("photos");
 
-
             builder.HasKey(p => p.Id);
-
 
             builder.Property(p => p.Id)
             .HasColumnName("id")
             .ValueGeneratedNever(); // domain generates Guid
 
-
-            builder.Property(p => p.FileName)
-            .HasColumnName("file_name")
-            .IsRequired()
-            .HasMaxLength(255);
-
-            builder.Property(p => p.FilePath)
-                .HasColumnName("file_path")
-                .IsRequired();
-
             builder.Property(p => p.DateTaken)
                 .HasColumnName("taken_at");
-
-            builder.Property(p => p.FileFormat)
-                .HasColumnName("file_format")
-                 .HasConversion<string>();
-
-            builder.Property(p => p.SizeBytes)
-                .HasColumnName("size_bytes");
-
-            builder.Property(p => p.Checksum)
-                .HasColumnName("checksum")
-                .IsRequired()
-                .HasMaxLength(32);
-
-            builder.HasIndex(p => p.Checksum)
-                .IsUnique();
 
             // CameraInfo columns
             builder.Property(p => p.CameraMake)
@@ -67,23 +39,32 @@ namespace PhotoCat.Infrastructure.Photos
                 .HasColumnName("exposure_focallength")
                 .HasColumnType("numeric");
 
-            // Dimensions columns
-            builder.Property(p => p.Width)
-                .HasColumnName("width");
-            builder.Property(p => p.Height)
-                .HasColumnName("height");
-            builder.Property(p => p.Orientation)
-                .HasColumnName("orientation");
+            builder.Property(p => p.Location)
+                .HasColumnName("location")
+                .HasColumnType("geography");
+
+            builder.Property(p => p.Altitude)
+                .HasColumnName("altitude");
+
+            builder.Property(p => p.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
+            builder.Property(p => p.RawExifJson)
+                .HasColumnName("raw_exif")
+                .HasColumnType("jsonb");
 
             builder.Property(p => p.CreatedAt)
-            .HasColumnName("created_at")
-            .HasDefaultValueSql("GETUTCDATE()")
-            .ValueGeneratedOnAdd();
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'()")
+                .ValueGeneratedOnAdd();
 
             builder.Property(p => p.UpdatedAt)
-            .HasColumnName("updated_at")
-            .HasDefaultValueSql("GETUTCDATE()")
-            .ValueGeneratedOnAddOrUpdate();
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'()")
+                .ValueGeneratedOnAddOrUpdate();
+
+            builder.HasQueryFilter(p => !p.IsDeleted);
 
             builder.OwnsMany(p => p.Tags, tags =>
             {
@@ -96,9 +77,75 @@ namespace PhotoCat.Infrastructure.Photos
                 tags.HasKey("photo_id", "Name");      // composite PK
             });
 
+            builder.OwnsMany(p => p.Files, files =>
+            { 
+                files.ToTable("photo_files");          // table for the collection
+                files.HasKey(f => f.Id);
+
+                files.Property(f => f.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedNever(); // domain generates Guid
+
+                files.WithOwner().HasForeignKey("photo_id");
+
+                files.Property(f => f.FileName)
+                    .HasColumnName("file_name")
+                    .IsRequired()
+                    .HasMaxLength(255);
+
+                files.Property(f => f.FilePath)
+                    .HasColumnName("file_path")
+                    .IsRequired();
+
+                files.Property(f => f.FileType)
+                    .HasColumnName("file_format")
+                    .HasConversion<string>();
+
+                // Dimensions columns
+                files.Property(f => f.DimensionWidth)
+                    .HasColumnName("width");
+                files.Property(f => f.DimensionHeight)
+                    .HasColumnName("height");
+                files.Property(f => f.DimensionOrientation)
+                    .HasColumnName("orientation");
+
+                files.Property(f => f.SizeBytes)
+                    .HasColumnName("size_bytes");
+
+                files.Property(f => f.Checksum)
+                    .HasColumnName("checksum")
+                    .IsRequired()
+                    .HasMaxLength(64);
+
+                files.Property(f => f.Notes)
+                    .HasColumnName("notes")
+                    .HasMaxLength(1000);
+
+                files.Property(f => f.IsDeleted)
+                    .HasColumnName("is_deleted")
+                    .HasDefaultValue(false);
+
+                files.Property(f => f.CreatedAt)
+                    .HasColumnName("created_at")
+                    .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'")
+                    .ValueGeneratedOnAdd();
+
+                files.Property(f => f.UpdatedAt)
+                    .HasColumnName("updated_at")
+                    .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'()")
+                    .ValueGeneratedOnAddOrUpdate();
+
+                files.HasIndex(f => f.Checksum)
+                    .IsUnique();
+
+            });
+
 
             builder.Navigation(p => p.Tags)
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.Navigation(p => p.Files)
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

@@ -5,26 +5,25 @@ namespace PhotoCat.Domain.Photos
 {
     public sealed class Photo
     {
-        public Guid Id { get; set; }
-        public string FileName { get; private set; } = null!;
-        public string FilePath { get; private set; } = null!;
+        public Guid Id { get; private set; }
         public DateTime? DateTaken { get; private set; }
-        public PhotoFileType FileFormat { get; private set; }
-        public long? SizeBytes { get; private set; }
-        public byte[] Checksum { get; private set; } = null!;
 
         public CameraInfo? Camera { get; private set; } = null!;
         public ExposureInfo? Exposure { get; private set; }
-        public Dimensions? Dimensions { get; private set; }
         public GeoLocation? Location { get; private set; }
 
         public IReadOnlyDictionary<string, string>? RawExif { get; init; }
+
+        private readonly List<PhotoFile> _files = [];
+        public IReadOnlyCollection<PhotoFile> Files => _files.Where(f => !f.IsDeleted).ToList().AsReadOnly();
+
+        public Guid RepresentativeFileId { get; private set; }
 
         // Tags are a value object collection
         private readonly List<Tag> _tags = [];
         public IReadOnlyCollection<Tag> Tags => _tags.AsReadOnly();
 
-
+        public bool IsDeleted { get; private set; }
 
         // DB-managed audit fields
         public DateTime CreatedAt { get; private set; }
@@ -34,38 +33,19 @@ namespace PhotoCat.Domain.Photos
         // EF needs a private constructor
         private Photo() { }
 
-        private Photo(string fileName, string filePath, PhotoFileType fileFormat, long? sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
+        private Photo(PhotoMetadata? metadata = null)
         {
-            if (string.IsNullOrWhiteSpace(fileName))
-                throw new ArgumentException("FileName cannot be empty.", nameof(fileName));
-
-            if (string.IsNullOrWhiteSpace(filePath))
-                throw new ArgumentException("FilePath cannot be empty.", nameof(filePath));
-
-            if (checksum is null || checksum.Length == 0)
-                throw new ArgumentException("Checksum cannot be empty.", nameof(checksum));
-
-            if (sizeBytes < 0)
-                throw new ArgumentOutOfRangeException(nameof(sizeBytes), "SizeBytes cannot be negative.");
-
-
             Id = Guid.NewGuid();
-            FileName = fileName;
-            FilePath = filePath;
-            FileFormat = fileFormat;
-            SizeBytes = sizeBytes;
-            Checksum = checksum;
             DateTaken = metadata?.DateTaken;
             Camera = metadata?.Camera;
             Exposure = metadata?.Exposure;
-            Dimensions = metadata?.Dimensions;
             Location = metadata?.Location;
             RawExif = metadata?.RawExif;
         }
 
-        public static Photo Create(string fileName, string filePath, PhotoFileType fileFormat, long? sizeBytes, byte[] checksum, IEnumerable<string>? tags = null, PhotoMetadata? metadata = null)
+        public static Photo Create(PhotoMetadata? metadata = null, IEnumerable<string>? tags = null)
         {
-            var photo = new Photo(fileName, filePath, fileFormat, sizeBytes, checksum, metadata);
+            var photo = new Photo(metadata);
 
             if (tags != null)
             {
@@ -76,33 +56,24 @@ namespace PhotoCat.Domain.Photos
             return photo;
         }
 
+        /// <summary>
+        /// Used for rehydration by repo
+        /// </summary>
         internal Photo(
-        Guid id,
-        string fileName,
-        string filePath,
-        PhotoFileType fileFormat,
-        long? sizeBytes,
-        byte[] checksum,
-        DateTime? dateTaken,
-        CameraInfo? camera,
-        ExposureInfo? exposure,
-        Dimensions? dimensions,
-        GeoLocation? location,
-        IReadOnlyDictionary<string, string>? rawExif,
-        IEnumerable<Tag>? tags,
-        DateTime createdAt,
-        DateTime updatedAt)
+            Guid id,
+            DateTime? dateTaken,
+            CameraInfo? camera,
+            ExposureInfo? exposure,
+            GeoLocation? location,
+            IReadOnlyDictionary<string, string>? rawExif,
+            IEnumerable<Tag>? tags,
+            DateTime createdAt,
+            DateTime updatedAt)
         {
             Id = id;
-            FileName = fileName;
-            FilePath = filePath;
-            FileFormat = fileFormat;
-            SizeBytes = sizeBytes;
-            Checksum = checksum;
             DateTaken = dateTaken;
             Camera = camera;
             Exposure = exposure;
-            Dimensions = dimensions;
             Location = location;
             RawExif = rawExif;
 
@@ -113,7 +84,26 @@ namespace PhotoCat.Domain.Photos
             UpdatedAt = updatedAt;
         }
 
-        // Behaviour: add a tag
+        public void AddFile(string fileName, string filePath, PhotoFileType fileType, long? sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
+        {
+            var photoFile = PhotoFile.Create(fileName, filePath, fileType, sizeBytes, checksum, metadata);
+            _files.Add(photoFile);
+        }
+
+        public void SoftDelete()
+        {
+            if (Files.Count != 0)
+            {
+                throw new PhotoDeletionException(Id);
+            }
+            IsDeleted = true;
+        }
+
+        public void Restore()
+        {
+            IsDeleted = false;
+        }
+
         public void AddTag(string tagName)
         {
             var tag = new Tag(tagName);
@@ -134,14 +124,27 @@ namespace PhotoCat.Domain.Photos
             }
         }
 
-        public void SetRepresentativeDerivative()
+        public void SetRepresentativeFile(Guid newRepresentativeFileId)
         {
-            //TODO: Placeholder for logic to set a representative derivative
+            var file = _files.SingleOrDefault(f => f.Id == newRepresentativeFileId);
+            if(file is null)
+            {
+                return;
+            }
+            RepresentativeFileId = newRepresentativeFileId;
         }
 
-        public void MarkDeleted()
+        public void SoftDeleteFile(Guid photoFileId)
         {
-            //TODO: Placeholder for soft delete logic
+            var file = _files.SingleOrDefault(f => f.Id == photoFileId);
+            file?.SoftDelete();
+        }
+
+        public void RestoreFile(Guid photoFileId)
+        {
+            var file = _files.SingleOrDefault(f => f.Id == photoFileId);
+            file?.Restore();
+
         }
     }
 }

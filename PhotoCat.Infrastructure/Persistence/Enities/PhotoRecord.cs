@@ -6,16 +6,8 @@ namespace PhotoCat.Infrastructure.Persistence.Enities
     public class PhotoRecord
     {
         public Guid Id { get; set; }
-
-        public string FileName { get; set; } = null!;
-        public string FilePath { get; set; } = null!;
         public DateTime? DateTaken { get; set; }
 
-        public PhotoFileType FileFormat { get; set; }
-        public long? SizeBytes { get; set; }
-        public byte[] Checksum { get; set; } = null!;
-
-        public IReadOnlyCollection<Tag> Tags { get; set; } = [];
 
         // CameraInfo
         public string? CameraMake { get; set; }
@@ -28,19 +20,17 @@ namespace PhotoCat.Infrastructure.Persistence.Enities
         public string? ExposureTime { get; set; }            
         public decimal? ExposureFocalLength { get; set; }    
 
-        // Dimensions
-        public int? Width { get; set; }
-        public int? Height { get; set; }
-        public int? Orientation { get; set; }
-
         // GeoLocation
         public Point? Location { get; set; }                 
         public double? Altitude { get; set; }
-        
-        // Raw EXIF dictionary stored as JSONB
-        public string? RawExifJson { get; set; }
 
-        public DateTime CreatedAt { get; private set; }
-        public DateTime UpdatedAt { get; private set; }
+        public string? RawExifJson { get; set; }
+        public IReadOnlyCollection<PhotoFileRecord> Files { get; set; } = [];
+        public IReadOnlyCollection<Tag> Tags { get; set; } = [];
+
+        public bool IsDeleted { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 }

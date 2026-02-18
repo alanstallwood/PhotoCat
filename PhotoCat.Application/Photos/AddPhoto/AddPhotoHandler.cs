@@ -39,22 +39,18 @@ public sealed class AddPhotoHandler
             return AddPhotoResult.AlreadyExists(existing.Id);
         }
 
-        var fileInfo = new FileInfo(command.FilePath);
-        var fileType = _fileTypeDetector.Detect(command.FilePath);
+        //var fileInfo = new FileInfo(command.FilePath);
+        //var fileType = _fileTypeDetector.Detect(command.FilePath);
+        //TODO: Move this to PhotoFile
         var metadata = _exifExtractor.Extract(command.FilePath);
 
 
         // Create the aggregate using the factory
         var photo = Photo.Create(
-            fileInfo.Name,
-            command.FilePath,
-            fileType,
-            fileInfo.Length,
-            checksum,
-            command.Tags,
-            metadata);
+            metadata,
+            command.Tags);
 
-        var result = await _photoRepository.AddAsync(photo, ct);
+        await _photoRepository.AddAsync(photo, ct);
 
         return AddPhotoResult.Created(photo.Id);
     }

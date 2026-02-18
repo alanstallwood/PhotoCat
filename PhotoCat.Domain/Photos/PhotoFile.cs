@@ -1,0 +1,79 @@
+﻿namespace PhotoCat.Domain.Photos
+{
+    public class PhotoFile
+    {
+        public Guid Id { get; private set; }
+        public Guid PhotoId { get; private set; }
+        public string FileName { get; private set; } = null!;
+        public string FilePath { get; private set; } = null!;
+        public PhotoFileType FileType { get; private set; }
+        public Dimensions? Dimensions { get; private set; }
+        public long? SizeBytes { get; private set; }
+        public byte[] Checksum { get; private set; } = null!;
+        public string? Notes { get; private set; }
+        // TODO: Do we need a role Original/Edit/Export/Thumbnail...
+        public bool IsDeleted { get; private set; }
+        public DateTime CreatedAt { get; private set; }
+        public DateTime UpdatedAt { get; private set; }
+
+        private PhotoFile() { }
+
+        private PhotoFile(string fileName, string filePath, PhotoFileType fileType, long? sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+                throw new ArgumentException("FileName cannot be empty.", nameof(fileName));
+
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("FilePath cannot be empty.", nameof(filePath));
+
+            if (checksum is null || checksum.Length == 0)
+                throw new ArgumentException("Checksum cannot be empty.", nameof(checksum));
+
+            if (sizeBytes < 0)
+                throw new ArgumentOutOfRangeException(nameof(sizeBytes), "SizeBytes cannot be negative.");
+
+
+            Id = Guid.NewGuid();
+            FileName = fileName;
+            FilePath = filePath;
+            FileType = fileType;
+            SizeBytes = sizeBytes;
+            Checksum = checksum;
+            Dimensions = metadata?.Dimensions;
+        }
+
+        public static PhotoFile Create(string fileName, string filePath, PhotoFileType fileType, long? sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
+        {
+            return new PhotoFile(fileName, filePath, fileType, sizeBytes, checksum, metadata);
+        }
+
+        public void ReplaceFile(PhotoFileType fileType, long? sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
+        {
+            FileType = fileType;
+            SizeBytes = sizeBytes;
+            Checksum = checksum;
+            Dimensions = metadata?.Dimensions;
+        }
+
+        public void Rename(string fileName, string filePath)
+        {
+            FileName = fileName;
+            FilePath = filePath;
+        }
+
+        public void SoftDelete()
+        {
+            IsDeleted = true;
+        }
+
+        public void Restore()
+        {
+            IsDeleted = false;
+        }
+
+        public void AmendNotes(string notes)
+        {
+            Notes = notes;
+        }
+    }
+}
