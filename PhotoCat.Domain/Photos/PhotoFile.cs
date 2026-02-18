@@ -47,6 +47,22 @@
             return new PhotoFile(fileName, filePath, fileType, sizeBytes, checksum, metadata);
         }
 
+        internal PhotoFile(Guid id, Guid photoId, string fileName, string filePath, PhotoFileType fileType, long? sizeBytes, byte[] checksum, Dimensions? dimensions, string? notes, bool isDeleted, DateTime createdAt, DateTime updatedAt)
+        {
+            Id = id;
+            PhotoId = photoId;
+            FileName = fileName;
+            FilePath = filePath;
+            FileType = fileType;
+            SizeBytes = sizeBytes;
+            Checksum = checksum;
+            Dimensions = dimensions;
+            Notes = notes;
+            IsDeleted = isDeleted;
+            CreatedAt = createdAt;
+            UpdatedAt = updatedAt;
+        }
+
         public void ReplaceFile(PhotoFileType fileType, long? sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
         {
             FileType = fileType;

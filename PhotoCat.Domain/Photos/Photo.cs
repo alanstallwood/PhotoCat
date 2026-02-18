@@ -66,7 +66,10 @@ namespace PhotoCat.Domain.Photos
             ExposureInfo? exposure,
             GeoLocation? location,
             IReadOnlyDictionary<string, string>? rawExif,
+            IEnumerable<PhotoFile>? files,
+            Guid representativeFileId,
             IEnumerable<Tag>? tags,
+            bool isDeleted,
             DateTime createdAt,
             DateTime updatedAt)
         {
@@ -77,8 +80,15 @@ namespace PhotoCat.Domain.Photos
             Location = location;
             RawExif = rawExif;
 
+            if (files != null)
+                _files.AddRange(files);
+
+            RepresentativeFileId = representativeFileId;
+
             if (tags != null)
                 _tags.AddRange(tags);
+
+            IsDeleted = isDeleted;
 
             CreatedAt = createdAt;
             UpdatedAt = updatedAt;

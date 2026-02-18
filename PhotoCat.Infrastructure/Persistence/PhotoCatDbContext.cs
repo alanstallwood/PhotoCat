@@ -10,7 +10,7 @@ namespace PhotoCat.Infrastructure
 
 
         public PhotoCatDbContext(DbContextOptions<PhotoCatDbContext> options)
-        : base(options) { }
+            : base(options) { }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

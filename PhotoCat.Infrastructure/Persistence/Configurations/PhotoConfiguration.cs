@@ -46,13 +46,18 @@ namespace PhotoCat.Infrastructure.Photos
             builder.Property(p => p.Altitude)
                 .HasColumnName("altitude");
 
+            builder.Property(p => p.RawExifJson)
+                .HasColumnName("raw_exif")
+                .HasColumnType("jsonb");
+
+            builder.Property(p => p.RepresentativeFileId)
+                .HasColumnName("representative_file_id");
+
             builder.Property(p => p.IsDeleted)
                 .HasColumnName("is_deleted")
                 .HasDefaultValue(false);
 
-            builder.Property(p => p.RawExifJson)
-                .HasColumnName("raw_exif")
-                .HasColumnType("jsonb");
+
 
             builder.Property(p => p.CreatedAt)
                 .HasColumnName("created_at")
@@ -102,11 +107,11 @@ namespace PhotoCat.Infrastructure.Photos
                     .HasConversion<string>();
 
                 // Dimensions columns
-                files.Property(f => f.DimensionWidth)
+                files.Property(f => f.Width)
                     .HasColumnName("width");
-                files.Property(f => f.DimensionHeight)
+                files.Property(f => f.Height)
                     .HasColumnName("height");
-                files.Property(f => f.DimensionOrientation)
+                files.Property(f => f.Orientation)
                     .HasColumnName("orientation");
 
                 files.Property(f => f.SizeBytes)

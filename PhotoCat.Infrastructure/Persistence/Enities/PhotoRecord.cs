@@ -26,8 +26,8 @@ namespace PhotoCat.Infrastructure.Persistence.Enities
 
         public string? RawExifJson { get; set; }
         public IReadOnlyCollection<PhotoFileRecord> Files { get; set; } = [];
+        public Guid RepresentativeFileId { get; set; }
         public IReadOnlyCollection<Tag> Tags { get; set; } = [];
-
         public bool IsDeleted { get; set; }
 
         public DateTime CreatedAt { get; set; }
