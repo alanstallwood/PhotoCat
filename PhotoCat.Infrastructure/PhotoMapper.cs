@@ -1,4 +1,5 @@
-﻿using PhotoCat.Domain.Photos;
+﻿using NetTopologySuite.Geometries;
+using PhotoCat.Domain.Photos;
 using PhotoCat.Infrastructure.Persistence.Enities;
 using System.Text.Json;
 

@@ -1,4 +1,6 @@
-﻿namespace PhotoCat.Domain.Photos
+﻿using PhotoCat.Domain.Exceptions;
+
+namespace PhotoCat.Domain.Photos
 {
     public class PhotoFile
     {
@@ -21,16 +23,16 @@
         private PhotoFile(string fileName, string filePath, PhotoFileType fileType, long? sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
         {
             if (string.IsNullOrWhiteSpace(fileName))
-                throw new ArgumentException("FileName cannot be empty.", nameof(fileName));
+                throw new InvalidFileNameException();
 
             if (string.IsNullOrWhiteSpace(filePath))
-                throw new ArgumentException("FilePath cannot be empty.", nameof(filePath));
+                throw new InvalidFilePathException();
 
             if (checksum is null || checksum.Length == 0)
-                throw new ArgumentException("Checksum cannot be empty.", nameof(checksum));
+                throw new InvalidChecksumException();
 
             if (sizeBytes < 0)
-                throw new ArgumentOutOfRangeException(nameof(sizeBytes), "SizeBytes cannot be negative.");
+                throw new InvalidFileSizeException(sizeBytes.Value);
 
 
             Id = Guid.NewGuid();

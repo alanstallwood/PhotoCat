@@ -1,13 +1,8 @@
-﻿namespace PhotoCat.Domain.Photos
+﻿namespace PhotoCat.Domain.Exceptions
 {
-    public class PhotoDeletionException : Exception
+    public sealed class PhotoDeletionException(Guid photoId) 
+        : DomainException($"Cannot delete photo {photoId} with active files.")
     {
-        public Guid PhotoId { get; }
-
-        public PhotoDeletionException(Guid photoId)
-            : base($"Cannot delete photo {photoId} with active files.")
-        {
-            PhotoId = photoId;
-        }
+        public Guid PhotoId { get; } = photoId;
     }
 }

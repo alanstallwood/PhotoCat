@@ -1,11 +1,12 @@
-﻿namespace PhotoCat.Application.Photos.AddPhoto
+﻿using MediatR;
+using PhotoCat.Infrastructure.Photos;
+
+namespace PhotoCat.Application.Photos.AddPhoto
 {
-    public sealed class AddPhotoCommand(
-        string filePath,
-        IEnumerable<string>? tags = null)
+    public sealed class AddPhotoCommand : IRequest<AddPhotoResult>
     {
-        public string FilePath { get; init; } = filePath;
-        public IEnumerable<string>? Tags { get; init; } = tags;
+        public IReadOnlyCollection<string>? FilePaths { get; init; } = [];
+        public IEnumerable<string>? Tags { get; init; } = [];
     }
 
 }

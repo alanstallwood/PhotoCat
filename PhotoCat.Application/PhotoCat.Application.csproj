@@ -7,11 +7,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="10.0.0" />
+    <PackageReference Include="MediatR" Version="14.0.0" />
+    <PackageReference Include="Npgsql" Version="10.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PhotoCat.Domain\PhotoCat.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="PhotoQueries\" />
+    <Folder Include="Photos\DeletePhoto\" />
+    <Folder Include="Photos\AddPhotoFile\" />
+    <Folder Include="Photos\DeletePhotoFIle\" />
+    <Folder Include="Photos\AddTag\" />
+    <Folder Include="Photos\RemoveTag\" />
+    <Folder Include="Photos\SetRepresentativeFile\" />
+    <Folder Include="Photos\RestorePhoto\" />
   </ItemGroup>	
 
 </Project>

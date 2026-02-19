@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using PhotoCat.Domain.Exceptions;
+using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("PhotoCat.Infrastructure")]
 namespace PhotoCat.Domain.Photos
@@ -94,10 +95,12 @@ namespace PhotoCat.Domain.Photos
             UpdatedAt = updatedAt;
         }
 
-        public void AddFile(string fileName, string filePath, PhotoFileType fileType, long? sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
+        public PhotoFile AddFile(string fileName, string filePath, PhotoFileType fileType, long? sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
         {
             var photoFile = PhotoFile.Create(fileName, filePath, fileType, sizeBytes, checksum, metadata);
             _files.Add(photoFile);
+
+            return photoFile;
         }
 
         public void SoftDelete()
