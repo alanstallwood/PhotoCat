@@ -50,7 +50,7 @@ public sealed class PhotoRepository(PhotoCatDbContext db) : IPhotoRepository
             .AnyAsync(ct);
     }
 
-    public async Task Update(Photo photo, CancellationToken ct)
+    public async Task UpdateAsync(Photo photo, CancellationToken ct)
     {
         var record = PhotoMapper.ToRecord(photo);
         _db.Photos.Update(record);

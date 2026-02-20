@@ -19,8 +19,7 @@
     <Folder Include="PhotoQueries\" />
     <Folder Include="Photos\DeletePhoto\" />
     <Folder Include="Photos\DeletePhotoFIle\" />
-    <Folder Include="Photos\AddTag\" />
-    <Folder Include="Photos\RemoveTag\" />
+    <Folder Include="Photos\RestorePhotoFile\" />
     <Folder Include="Photos\SetRepresentativeFile\" />
     <Folder Include="Photos\RestorePhoto\" />
   </ItemGroup>	

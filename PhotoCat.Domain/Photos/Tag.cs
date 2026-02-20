@@ -1,19 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using PhotoCat.Domain.Exceptions;
 
-namespace PhotoCat.Domain.Photos
+namespace PhotoCat.Domain.Photos;
+
+public sealed record Tag
 {
-    public sealed record Tag
+    public string Name { get; }
+
+    public Tag(string name)
     {
-        public string Name { get; }
+        if (string.IsNullOrWhiteSpace(name))
+            throw new TagCannotBeEmptyException();
 
-        public Tag(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Tag cannot be empty", nameof(name));
-
-            Name = name.Trim().ToLowerInvariant(); // normalisation
-        }
+        Name = name.Trim().ToLowerInvariant(); // normalisation
     }
 }

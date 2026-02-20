@@ -44,7 +44,7 @@ public sealed class AddPhotoFileCommandHandler(IExifExtractor exifExtractor, ICh
         var fileType = _fileTypeDetector.Detect(request.File);
 
         var file = photo.AddFile(request.FileName, filePath, fileType, request.File.Length, checksum, metadata);
-        await _photoRepository.Update(photo, ct);
+        await _photoRepository.UpdateAsync(photo, ct);
 
         return file.Id;
     }

@@ -40,7 +40,7 @@ namespace PhotoCat.Application.Photos.AddPhotoFIleFromPath
             var fileInfo = new FileInfo(fullPath);
 
             var file = photo.AddFile(request.FileName, request.FilePath, fileType, fileInfo.Length, checksum, metadata);
-            await _photoRepository.Update(photo, ct);
+            await _photoRepository.UpdateAsync(photo, ct);
 
             return file.Id;
         }

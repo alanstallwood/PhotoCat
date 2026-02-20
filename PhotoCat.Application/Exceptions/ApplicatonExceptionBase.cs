@@ -1,7 +1,6 @@
-﻿namespace PhotoCat.Application.Exceptions
+﻿namespace PhotoCat.Application.Exceptions;
+
+public abstract class ApplicationExceptionBase(string message) 
+    : Exception(message)
 {
-    public abstract class ApplicationExceptionBase(string message) 
-        : Exception(message)
-    {
-    }
 }
