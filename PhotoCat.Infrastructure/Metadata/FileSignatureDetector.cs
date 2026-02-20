@@ -5,10 +5,8 @@ namespace PhotoCat.Infrastructure.Metadata
 {
     public sealed class FileSignatureDetector : IFileTypeDetector
     {
-        public PhotoFileType Detect(string filePath)
+        public PhotoFileType Detect(Stream stream)
         {
-            using var stream = File.OpenRead(filePath);
-
             Span<byte> header = stackalloc byte[12];
             stream.ReadExactly(header);
 
@@ -52,7 +50,12 @@ namespace PhotoCat.Infrastructure.Metadata
                 return PhotoFileType.Nef;
 
             return PhotoFileType.Unknown;
+        }
 
+        public PhotoFileType Detect(string filePath)
+        {
+            using var stream = File.OpenRead(filePath);
+            return Detect(stream);
         }
     }
 }

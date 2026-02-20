@@ -18,7 +18,6 @@
   <ItemGroup>
     <Folder Include="PhotoQueries\" />
     <Folder Include="Photos\DeletePhoto\" />
-    <Folder Include="Photos\AddPhotoFile\" />
     <Folder Include="Photos\DeletePhotoFIle\" />
     <Folder Include="Photos\AddTag\" />
     <Folder Include="Photos\RemoveTag\" />

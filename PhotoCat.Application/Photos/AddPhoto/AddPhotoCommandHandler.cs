@@ -18,10 +18,10 @@ public sealed class AddPhotoCommandHandler(IExifExtractor exifExtractor, IChecks
 
     public async Task<Guid> Handle(AddPhotoCommand request, CancellationToken ct = default)
     {
-        if (request.FilePaths == null || request.FilePaths.Count == 0)
+        if (request.FullFilePaths == null || request.FullFilePaths.Count == 0)
             throw new NoFilesProvidedException();
 
-        var newFiles = await BuildNewFilesAsync(request.FilePaths, ct);
+        var newFiles = await BuildNewFilesAsync(request.FullFilePaths, ct);
 
         if (newFiles.Count == 0)
             throw new AllFilesAlreadyExistException();
@@ -60,27 +60,27 @@ public sealed class AddPhotoCommandHandler(IExifExtractor exifExtractor, IChecks
         return photo.Id;
     }
 
-    private async Task<List<NewFileData>> BuildNewFilesAsync(IReadOnlyCollection<string> paths, CancellationToken ct)
+    private async Task<List<NewFileData>> BuildNewFilesAsync(IReadOnlyCollection<string> fullFilePaths, CancellationToken ct)
     {
         var results = new List<NewFileData>();
 
-        foreach (var path in paths)
+        foreach (var fullFilePath in fullFilePaths)
         {
-            if (!File.Exists(path))
-                throw new FileNotFoundApplicationException(path);
+            if (!File.Exists(fullFilePath))
+                throw new FileNotFoundApplicationException(fullFilePath);
 
-            var checksum = await _checksumService.CalculateAsync(path, ct);
+            var checksum = await _checksumService.CalculateAsync(fullFilePath, ct);
 
             if (await _photoRepository.FileChecksumExistsAsync(checksum, ct))
                 continue;
 
-            var metadata = _exifExtractor.Extract(path);
-            var fileType = _fileTypeDetector.Detect(path);
-            var fileInfo = new FileInfo(path);
+            var metadata = _exifExtractor.Extract(fullFilePath);
+            var fileType = _fileTypeDetector.Detect(fullFilePath);
+            var fileInfo = new FileInfo(fullFilePath);
 
             results.Add(new NewFileData(
                 fileInfo.Name,
-                path,
+                fileInfo.DirectoryName!,
                 fileType,
                 checksum,
                 fileInfo.Length,

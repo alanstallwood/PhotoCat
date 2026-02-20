@@ -2,4 +2,5 @@
   <Project Path="PhotoCat.Application/PhotoCat.Application.csproj" Id="5c9a445b-84fd-41a5-b3e0-baeaeeffe903" />
   <Project Path="PhotoCat.Domain/PhotoCat.Domain.csproj" />
   <Project Path="PhotoCat.Infrastructure/PhotoCat.Infrastructure.csproj" Id="92440d59-e34b-4f20-89e3-705c2d061a6d" />
+  <Project Path="PhotoCat.UI.BlazorServer/PhotoCat.UI.BlazorServer.csproj" Id="fdeb24c0-5050-4dd4-b167-851391323d4c" />
 </Solution>

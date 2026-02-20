@@ -30,7 +30,7 @@ public sealed class PhotoRepository(PhotoCatDbContext db) : IPhotoRepository
         return record != null ? PhotoMapper.ToDomain(record) : null;
     }
 
-    public async Task<AddPhotoResult> AddAsync(
+    public async Task<Guid> AddAsync(
         Photo photo,
         CancellationToken ct)
     {
@@ -39,7 +39,7 @@ public sealed class PhotoRepository(PhotoCatDbContext db) : IPhotoRepository
 
         await _db.SaveChangesAsync(ct);
 
-        return AddPhotoResult.Created(photo.Id);
+        return photo.Id;
     }
 
     public async Task<bool> FileChecksumExistsAsync(byte[] checksum, CancellationToken ct)
