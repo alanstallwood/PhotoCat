@@ -1,10 +1,9 @@
 ﻿using PhotoCat.Domain.Photos;
 
-namespace PhotoCat.Application.Interfaces
+namespace PhotoCat.Application.Interfaces;
+
+public interface IFileTypeDetector
 {
-    public interface IFileTypeDetector
-    {
-        PhotoFileType Detect(string filePath);
-        PhotoFileType Detect(Stream stream);
-    }
+    PhotoFileType Detect(string filePath);
+    PhotoFileType Detect(Stream stream);
 }

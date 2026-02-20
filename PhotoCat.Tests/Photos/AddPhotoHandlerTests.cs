@@ -3,6 +3,7 @@ using PhotoCat.Application.Photos;
 using PhotoCat.Application.Photos.AddPhoto;
 using PhotoCat.Domain.Photos;
 using PhotoCat.Infrastructure.Metadata;
+using PhotoCat.Infrastructure.Photos;
 
 namespace PhotoCat.Tests.Photos;
 
@@ -13,33 +14,31 @@ public sealed class AddPhotoHandlerTests
     {
         using var tempFile = new TempFile();
         var repository = new FakePhotoRepository();
-        var unitOfWork = new FakeUnitOfWork();
-        var metadata = new PhotoMetadata(
-            DateTaken: new DateTime(2024, 1, 1),
-            Camera: null,
-            Exposure: null,
-            Dimensions: null,
-            Location: null,
-            RawExif: null);
+        var metadata = new PhotoMetadata {
+            DateTaken = new DateTime(2024, 1, 1),
+            Camera = null,
+            Exposure = null,
+            Dimensions = null,
+            Location = null,
+            RawExif = null 
+        };
         var exifExtractor = new FakeExifExtractor(metadata);
+        var checksumService = new FakeChecksumService();
+        var fileTypeDetector = new FakeFileTypeDetector();
 
-        var handler = new AddPhotoHandler(exifExtractor, repository, unitOfWork);
+        var handler = new AddPhotoHandler(exifExtractor, checksumService, fileTypeDetector, repository);
         var command = new AddPhotoCommand(
-            fileName: "sample.jpg",
             filePath: tempFile.Path,
-            fileFormat: "jpg",
-            sizeBytes: 42,
-            checksum: "sha256",
-            tags: ["Travel", "travel"]);
+            tags: ["Travel", "travel"] );
 
-        var id = await handler.Handle(command);
+        var result = await handler.Handle(command);
 
-        Assert.NotEqual(Guid.Empty, id);
+        Assert.NotEqual(Guid.Empty, result.Id);
         Assert.NotNull(repository.LastAddedPhoto);
-        Assert.Equal(id, repository.LastAddedPhoto!.Id);
-        Assert.Equal("sample.jpg", repository.LastAddedPhoto.FileName);
-        Assert.Equal(1, repository.LastAddedPhoto.Tags.Count);
-        Assert.Equal(1, unitOfWork.SaveChangesCallCount);
+        Assert.True(result.IsCreated);
+        Assert.Equal(result.Id, repository.LastAddedPhoto!.Id);
+        Assert.Equal(new FileInfo(tempFile.Path).Name, repository.LastAddedPhoto.FileName);
+        Assert.Single(repository.LastAddedPhoto.Tags);
         Assert.Equal(1, repository.AddCallCount);
         Assert.Equal(1, exifExtractor.CallCount);
     }
@@ -48,21 +47,16 @@ public sealed class AddPhotoHandlerTests
     public async Task Handle_ShouldThrowWhenFileDoesNotExist()
     {
         var repository = new FakePhotoRepository();
-        var unitOfWork = new FakeUnitOfWork();
         var exifExtractor = new FakeExifExtractor(null);
+        var checksumService = new FakeChecksumService();
+        var fileTypeDetector = new FakeFileTypeDetector();
 
-        var handler = new AddPhotoHandler(exifExtractor, repository, unitOfWork);
-        var command = new AddPhotoCommand(
-            fileName: "missing.jpg",
-            filePath: "/path/does/not/exist.jpg",
-            fileFormat: "jpg",
-            sizeBytes: 42,
-            checksum: "sha256");
+        var handler = new AddPhotoHandler(exifExtractor, checksumService, fileTypeDetector, repository);
+        var command = new AddPhotoCommand(filePath: "/path/does/not/exist.jpg");
 
         await Assert.ThrowsAsync<FileNotFoundException>(() => handler.Handle(command));
 
         Assert.Equal(0, repository.AddCallCount);
-        Assert.Equal(0, unitOfWork.SaveChangesCallCount);
         Assert.Equal(0, exifExtractor.CallCount);
     }
 
@@ -85,22 +79,32 @@ public sealed class AddPhotoHandlerTests
         public Task<Photo?> GetByIdAsync(Guid id, CancellationToken ct)
             => Task.FromResult<Photo?>(null);
 
-        public Task AddAsync(Photo photo, CancellationToken ct)
+        public Task<Photo?> GetByChecksumAsync(byte[] checksum, CancellationToken ct)
+        {
+            return Task.FromResult<Photo?>(null);
+        }
+
+        Task<AddPhotoResult> IPhotoRepository.AddAsync(Photo photo, CancellationToken ct)
         {
             AddCallCount++;
             LastAddedPhoto = photo;
-            return Task.CompletedTask;
+            return Task.FromResult(AddPhotoResult.Created(photo.Id));
         }
     }
 
-    private sealed class FakeUnitOfWork : IUnitOfWork
+    private sealed class FakeChecksumService : IChecksumService
     {
-        public int SaveChangesCallCount { get; private set; }
-
-        public Task<int> SaveChangesAsync(CancellationToken ct)
+        public Task<byte[]> CalculateAsync(string filePath, CancellationToken cancellationToken = default)
         {
-            SaveChangesCallCount++;
-            return Task.FromResult(1);
+            return Task.FromResult(new byte[] { 0x00, 0x01, 0x02, 0x03 });
+        }        
+    }
+
+    private sealed class FakeFileTypeDetector : IFileTypeDetector
+    {
+        public PhotoFileType Detect(string filePath)
+        {
+            return PhotoFileType.Jpeg;
         }
     }
 

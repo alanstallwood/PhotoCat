@@ -10,9 +10,9 @@ public sealed class PhotoTests
         var photo = Photo.Create(
             fileName: "image.jpg",
             filePath: "/tmp/image.jpg",
-            fileFormat: "jpg",
+            fileFormat: PhotoFileType.Jpeg,
             sizeBytes: 256,
-            checksum: "abc123",
+            checksum: new byte[] { 0x00, 0x01, 0x02, 0x03 },
             tags: [" Nature ", "nature", "Travel"]);
 
         var tagNames = photo.Tags.Select(t => t.Name).ToArray();
@@ -28,9 +28,9 @@ public sealed class PhotoTests
         var photo = Photo.Create(
             fileName: "image.jpg",
             filePath: "/tmp/image.jpg",
-            fileFormat: "jpg",
+            fileFormat: PhotoFileType.Jpeg,
             sizeBytes: 256,
-            checksum: "abc123",
+            checksum: new byte[] { 0x00, 0x01, 0x02, 0x03 },
             tags: ["nature", "travel"]);
 
         photo.RemoveTag(" Nature ");
@@ -45,9 +45,9 @@ public sealed class PhotoTests
         var act = () => Photo.Create(
             fileName: "image.jpg",
             filePath: "/tmp/image.jpg",
-            fileFormat: "jpg",
+            fileFormat: PhotoFileType.Jpeg,
             sizeBytes: -1,
-            checksum: "abc123");
+            checksum: new byte[] { 0x00, 0x01, 0x02, 0x03 });
 
         Assert.Throws<ArgumentOutOfRangeException>(act);
     }

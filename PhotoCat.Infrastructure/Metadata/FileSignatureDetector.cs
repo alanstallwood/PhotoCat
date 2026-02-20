@@ -1,5 +1,4 @@
-﻿using PhotoCat.Application.Interfaces;
-using PhotoCat.Domain.Photos;
+﻿using PhotoCat.Domain.Photos;
 
 namespace PhotoCat.Infrastructure.Metadata
 {
