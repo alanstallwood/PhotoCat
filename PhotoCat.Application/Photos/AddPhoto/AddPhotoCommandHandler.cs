@@ -4,42 +4,24 @@ using PhotoCat.Application.Interfaces;
 using PhotoCat.Application.Photos.AddPhoto;
 using PhotoCat.Domain.Photos;
 using PhotoCat.Infrastructure.Metadata;
-using PhotoCat.Infrastructure.Photos;
 
 namespace PhotoCat.Application.Photos;
 
 public sealed class AddPhotoCommandHandler(IExifExtractor exifExtractor, IChecksumService checksumService, 
                                         IFileTypeDetector fileTypeDetector, IPhotoRepository photoRepository) 
-    : IRequestHandler<AddPhotoCommand, AddPhotoResult>
+    : IRequestHandler<AddPhotoCommand, Guid>
 {
     private readonly IExifExtractor _exifExtractor = exifExtractor;
     private readonly IChecksumService _checksumService = checksumService;
     private readonly IFileTypeDetector _fileTypeDetector = fileTypeDetector;
     private readonly IPhotoRepository _photoRepository = photoRepository;
 
-    public async Task<AddPhotoResult> Handle(AddPhotoCommand request, CancellationToken ct = default)
+    public async Task<Guid> Handle(AddPhotoCommand request, CancellationToken ct = default)
     {
         if (request.FilePaths == null || request.FilePaths.Count == 0)
             throw new NoFilesProvidedException();
 
-        var newFiles = new List<(string FileName, string FilePath, PhotoFileType FileType, byte[] Checksum, long? SizeBytes, PhotoMetadata? metadata)>();
-        foreach (var filePath in request.FilePaths)
-        {
-            if (!File.Exists(filePath))
-                throw new FileNotFoundApplicationException(filePath);
-
-            var checksum = await _checksumService.CalculateAsync(filePath, ct);
-            if (await _photoRepository.FileChecksumExistsAsync(checksum, ct))
-            {
-                continue;
-            }
-
-            var fileInfo = new FileInfo(filePath);
-            var fileType = _fileTypeDetector.Detect(filePath);
-            var metadata = _exifExtractor.Extract(filePath);
-
-            newFiles.Add((fileInfo.Name, filePath, fileType, checksum, fileInfo.Length, metadata));
-        }
+        var newFiles = await BuildNewFilesAsync(request.FilePaths, ct);
 
         if (newFiles.Count == 0)
             throw new AllFilesAlreadyExistException();
@@ -54,7 +36,7 @@ public sealed class AddPhotoCommandHandler(IExifExtractor exifExtractor, IChecks
 
         // Create the aggregate using the factory
         var photo = Photo.Create(
-            mainFile.metadata,
+            mainFile.Metadata,
             request.Tags);
 
         newFiles.ForEach(f =>
@@ -65,7 +47,7 @@ public sealed class AddPhotoCommandHandler(IExifExtractor exifExtractor, IChecks
                 f.FileType,
                 f.SizeBytes,
                 f.Checksum,
-                f.metadata);
+                f.Metadata);
 
             if (f == mainFile)
             {
@@ -75,6 +57,36 @@ public sealed class AddPhotoCommandHandler(IExifExtractor exifExtractor, IChecks
 
         await _photoRepository.AddAsync(photo, ct);
 
-        return AddPhotoResult.Created(photo.Id);
+        return photo.Id;
+    }
+
+    private async Task<List<NewFileData>> BuildNewFilesAsync(IReadOnlyCollection<string> paths, CancellationToken ct)
+    {
+        var results = new List<NewFileData>();
+
+        foreach (var path in paths)
+        {
+            if (!File.Exists(path))
+                throw new FileNotFoundApplicationException(path);
+
+            var checksum = await _checksumService.CalculateAsync(path, ct);
+
+            if (await _photoRepository.FileChecksumExistsAsync(checksum, ct))
+                continue;
+
+            var metadata = _exifExtractor.Extract(path);
+            var fileType = _fileTypeDetector.Detect(path);
+            var fileInfo = new FileInfo(path);
+
+            results.Add(new NewFileData(
+                fileInfo.Name,
+                path,
+                fileType,
+                checksum,
+                fileInfo.Length,
+                metadata));
+        }
+
+        return results;
     }
 }
