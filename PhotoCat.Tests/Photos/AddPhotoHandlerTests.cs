@@ -1,4 +1,6 @@
 using PhotoCat.Application;
+using PhotoCat.Application.Exceptions;
+using PhotoCat.Application.Interfaces;
 using PhotoCat.Application.Photos;
 using PhotoCat.Application.Photos.AddPhoto;
 using PhotoCat.Domain.Photos;
@@ -26,18 +28,16 @@ public sealed class AddPhotoHandlerTests
         var checksumService = new FakeChecksumService();
         var fileTypeDetector = new FakeFileTypeDetector();
 
-        var handler = new AddPhotoHandler(exifExtractor, checksumService, fileTypeDetector, repository);
+        var handler = new AddPhotoCommandHandler(exifExtractor, checksumService, fileTypeDetector, repository);
         var command = new AddPhotoCommand(
-            filePath: tempFile.Path,
+            fullFilePaths: [tempFile.Path],
             tags: ["Travel", "travel"] );
 
-        var result = await handler.Handle(command);
+        var id = await handler.Handle(command);
 
-        Assert.NotEqual(Guid.Empty, result.Id);
+        Assert.NotEqual(Guid.Empty, id);
         Assert.NotNull(repository.LastAddedPhoto);
-        Assert.True(result.IsCreated);
-        Assert.Equal(result.Id, repository.LastAddedPhoto!.Id);
-        Assert.Equal(new FileInfo(tempFile.Path).Name, repository.LastAddedPhoto.FileName);
+        Assert.Equal(id, repository.LastAddedPhoto!.Id);
         Assert.Single(repository.LastAddedPhoto.Tags);
         Assert.Equal(1, repository.AddCallCount);
         Assert.Equal(1, exifExtractor.CallCount);
@@ -51,10 +51,10 @@ public sealed class AddPhotoHandlerTests
         var checksumService = new FakeChecksumService();
         var fileTypeDetector = new FakeFileTypeDetector();
 
-        var handler = new AddPhotoHandler(exifExtractor, checksumService, fileTypeDetector, repository);
-        var command = new AddPhotoCommand(filePath: "/path/does/not/exist.jpg");
+        var handler = new AddPhotoCommandHandler(exifExtractor, checksumService, fileTypeDetector, repository);
+        var command = new AddPhotoCommand(fullFilePaths: ["/path/does/not/exist.jpg"]);
 
-        await Assert.ThrowsAsync<FileNotFoundException>(() => handler.Handle(command));
+        await Assert.ThrowsAsync<FileNotFoundApplicationException>(() => handler.Handle(command));
 
         Assert.Equal(0, repository.AddCallCount);
         Assert.Equal(0, exifExtractor.CallCount);
@@ -68,6 +68,11 @@ public sealed class AddPhotoHandlerTests
         {
             CallCount++;
             return metadata;
+        }
+
+        public PhotoMetadata? Extract(Stream fileStream, string fileName)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -84,11 +89,26 @@ public sealed class AddPhotoHandlerTests
             return Task.FromResult<Photo?>(null);
         }
 
-        Task<AddPhotoResult> IPhotoRepository.AddAsync(Photo photo, CancellationToken ct)
+        Task<Guid> IPhotoRepository.AddAsync(Photo photo, CancellationToken ct)
         {
             AddCallCount++;
             LastAddedPhoto = photo;
-            return Task.FromResult(AddPhotoResult.Created(photo.Id));
+            return Task.FromResult(photo.Id);
+        }
+
+        public Task UpdateAsync(Photo photo, CancellationToken ct)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> FileChecksumExistsAsync(byte[] checksum, CancellationToken ct)
+        {
+            return Task.FromResult(false);
+        }
+
+        public Task<Photo?> GetByIdIncludingDeletedAsync(Guid id, CancellationToken ct)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -97,12 +117,22 @@ public sealed class AddPhotoHandlerTests
         public Task<byte[]> CalculateAsync(string filePath, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(new byte[] { 0x00, 0x01, 0x02, 0x03 });
-        }        
+        }
+
+        public Task<byte[]> CalculateAsync(Stream fileStream, CancellationToken ct = default)
+        {
+            return Task.FromResult(new byte[] { 0x00, 0x01, 0x02, 0x03 });
+        }
     }
 
     private sealed class FakeFileTypeDetector : IFileTypeDetector
     {
         public PhotoFileType Detect(string filePath)
+        {
+            return PhotoFileType.Jpeg;
+        }
+
+        public PhotoFileType Detect(Stream stream)
         {
             return PhotoFileType.Jpeg;
         }

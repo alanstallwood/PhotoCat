@@ -2,9 +2,9 @@
 
 namespace PhotoCat.Application.Photos.AddPhotoFileFromPath;
 
-public sealed class AddPhotoFileFromPathCommand : IRequest<Guid>
+public sealed class AddPhotoFileFromPathCommand(Guid photoId, string filePath, string fileName) : IRequest<Guid>
 {
-    public Guid PhotoId { get; set; }
-    public string FilePath { get; init; } = null!;
-    public string FileName { get; init; } = null!;
+    public Guid PhotoId { get; set; } = photoId;
+    public string FilePath { get; init; } = filePath;
+    public string FileName { get; init; } = fileName;
 }
