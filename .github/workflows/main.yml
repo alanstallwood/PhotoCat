@@ -1,0 +1,52 @@
+name: CI + AI Test Update (v2)
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  ci-and-codex:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out code with full history
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # Set up .NET 10 SDK
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      # Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore PhotoCat.sln
+
+      # Build
+      - name: Build
+        run: dotnet build PhotoCat.sln --no-restore --configuration Release
+
+      # Run initial tests
+      - name: Run tests
+        id: run_tests
+        run: dotnet test PhotoCat.sln --no-build --configuration Release
+
+      # Only proceed if tests succeeded
+      - name: AI: Update or create unit tests
+        if: ${{ success() }}
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt: |
+            For the PhotoCat .NET solution, review the current tests and lastest code changes.
+            Generate or update unit tests where appropriate to improve coverage and correctness.
+            Only touch files under test projects.
+            Ensure tests compile and then run successfully.    
