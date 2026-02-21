@@ -40,7 +40,7 @@ jobs:
         run: dotnet test PhotoCat.sln --no-build --configuration Release
 
       # Only proceed if tests succeeded
-      - name: AI: Update or create unit tests
+      - name: Update or create unit tests
         if: ${{ success() }}
         uses: openai/codex-action@v1
         with:
