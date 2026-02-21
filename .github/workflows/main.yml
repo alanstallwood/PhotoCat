@@ -28,16 +28,16 @@ jobs:
 
       # Restore dependencies
       - name: Restore dependencies
-        run: dotnet restore PhotoCat.sln
+        run: dotnet restore PhotoCat.slnx
 
       # Build
       - name: Build
-        run: dotnet build PhotoCat.sln --no-restore --configuration Release
+        run: dotnet build PhotoCat.slnx --no-restore --configuration Release
 
       # Run initial tests
       - name: Run tests
         id: run_tests
-        run: dotnet test PhotoCat.sln --no-build --configuration Release
+        run: dotnet test PhotoCat.slnx --no-build --configuration Release
 
       # Only proceed if tests succeeded
       - name: Update or create unit tests
