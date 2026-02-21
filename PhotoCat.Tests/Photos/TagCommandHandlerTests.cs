@@ -1,5 +1,5 @@
 using PhotoCat.Application.Exceptions;
-using PhotoCat.Application.Interfaces;
+using PhotoCat.Application.Photos;
 using PhotoCat.Application.Photos.AddTag;
 using PhotoCat.Application.Photos.RemoveTag;
 using PhotoCat.Domain.Photos;

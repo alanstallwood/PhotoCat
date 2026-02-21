@@ -1,7 +1,10 @@
+using PhotoCat.Application;
 using PhotoCat.Application.Exceptions;
 using PhotoCat.Application.Interfaces;
+using PhotoCat.Application.Photos;
 using PhotoCat.Application.Photos.AddPhotoFile;
 using PhotoCat.Domain.Photos;
+using PhotoCat.Infrastructure.Metadata;
 
 namespace PhotoCat.Tests.Photos;
 
