@@ -8,6 +8,7 @@ namespace PhotoCat.Infrastructure.Persistence.Enities
         public Guid Id { get; set; }
         public DateTime? DateTaken { get; set; }
 
+        public string GroupKey { get; set; } = null!;
 
         // CameraInfo
         public string? CameraMake { get; set; }

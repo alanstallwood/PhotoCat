@@ -46,7 +46,7 @@ public sealed class PhotoRepository(PhotoCatDbContext db) : IPhotoRepository
     {
         return await _db.Photos
             .SelectMany(p => p.Files)
-            .Where(f => f.Checksum == checksum && !f.IsDeleted)
+            .Where(f => f.Checksum.SequenceEqual(checksum) && !f.IsDeleted)
             .AnyAsync(ct);
     }
 

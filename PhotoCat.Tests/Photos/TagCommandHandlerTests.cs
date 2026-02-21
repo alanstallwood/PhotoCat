@@ -11,7 +11,7 @@ public sealed class TagCommandHandlerTests
     [Fact]
     public async Task AddTagHandle_ShouldAppendNormalizedTagAndPersist()
     {
-        var photo = Photo.Create(tags: ["travel"]);
+        var photo = Photo.Create([new NewFileDto("file1.jpg", "/path", PhotoFileType.Jpeg, [0x10], 10)], tags: ["travel"]);
         var repository = new FakePhotoRepository(photo);
         var sut = new AddTagCommandHandler(repository);
 
@@ -24,7 +24,7 @@ public sealed class TagCommandHandlerTests
     [Fact]
     public async Task RemoveTagHandle_ShouldDeleteTagAndPersist()
     {
-        var photo = Photo.Create(tags: ["travel", "nature"]);
+        var photo = Photo.Create([new NewFileDto("file1.jpg", "/path", PhotoFileType.Jpeg, [0x10], 10)], tags: ["travel", "nature"]);
         var repository = new FakePhotoRepository(photo);
         var sut = new RemoveTagCommandHandler(repository);
 

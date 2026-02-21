@@ -52,8 +52,7 @@ public sealed class AddPhotoFileCommandHandlerTests
 
     private static Photo CreatePhotoWithExistingFile(string filePath)
     {
-        var photo = Photo.Create();
-        photo.AddFile("existing.jpg", filePath, PhotoFileType.Jpeg, 10, [0x10], null);
+        var photo = Photo.Create([new NewFileDto("existing.jpg", filePath, PhotoFileType.Jpeg, [0x10], 10)]);
         return photo;
     }
 

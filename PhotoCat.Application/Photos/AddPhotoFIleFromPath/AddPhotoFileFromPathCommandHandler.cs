@@ -2,6 +2,7 @@
 using PhotoCat.Application.Exceptions;
 using PhotoCat.Application.Interfaces;
 using PhotoCat.Application.Photos.AddPhotoFileFromPath;
+using PhotoCat.Domain.Photos;
 using PhotoCat.Infrastructure.Metadata;
 
 namespace PhotoCat.Application.Photos.AddPhotoFIleFromPath
@@ -39,7 +40,15 @@ namespace PhotoCat.Application.Photos.AddPhotoFIleFromPath
             var fileType = _fileTypeDetector.Detect(fullPath);
             var fileInfo = new FileInfo(fullPath);
 
-            var file = photo.AddFile(request.FileName, request.FilePath, fileType, fileInfo.Length, checksum, metadata);
+            var fileDto = new NewFileDto(
+                request.FileName,
+                request.FilePath,
+                fileType,
+                checksum,
+                fileInfo.Length,
+                metadata);
+
+            var file = photo.AddFile(fileDto);
             await _photoRepository.UpdateAsync(photo, ct);
 
             return file.Id;

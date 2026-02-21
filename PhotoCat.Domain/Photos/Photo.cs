@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using PhotoCat.Domain.Exceptions;
+using PhotoCat.Domain.Services;
+using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("PhotoCat.Infrastructure")]
 namespace PhotoCat.Domain.Photos;
@@ -7,6 +9,8 @@ public sealed class Photo
 {
     public Guid Id { get; private set; }
     public DateTime? DateTaken { get; private set; }
+
+    public string GroupKey { get; private set; } = null!;
 
     public CameraInfo? Camera { get; private set; } = null!;
     public ExposureInfo? Exposure { get; private set; }
@@ -37,15 +41,41 @@ public sealed class Photo
     {
         Id = Guid.NewGuid();
         DateTaken = metadata?.DateTaken;
+        GroupKey = string.Empty;
         Camera = metadata?.Camera;
         Exposure = metadata?.Exposure;
         Location = metadata?.Location;
         RawExif = metadata?.RawExif;
     }
 
-    public static Photo Create(PhotoMetadata? metadata = null, IEnumerable<string>? tags = null)
+    public static Photo Create(IEnumerable<NewFileDto> initialFiles, IEnumerable<string>? tags = null)
     {
-        var photo = new Photo(metadata);
+        if (initialFiles == null || !initialFiles.Any())
+            throw new PhotoMustHaveAtLeastOneFileException();
+
+        var mainFile = initialFiles.FirstOrDefault(f => f.FileType == PhotoFileType.Nef);
+        if (mainFile == default)
+        {
+            mainFile = initialFiles.First();
+        }
+
+        var photo = new Photo(mainFile.Metadata);
+
+        foreach (var file in initialFiles)
+        {
+            try
+            {
+                var result = photo.AddFile(file);
+                if(file == mainFile)
+                {
+                    photo.SetRepresentativeFile(result.Id);
+                }
+            }
+            catch (PhotoFilesMustBeUniqueException)
+            {
+                //Ignore duplicates files in this entity. We should end up with one file if all the same.
+            }
+        }
 
         if (tags != null)
         {
@@ -62,6 +92,7 @@ public sealed class Photo
     internal Photo(
         Guid id,
         DateTime? dateTaken,
+        string groupKey,
         CameraInfo? camera,
         ExposureInfo? exposure,
         GeoLocation? location,
@@ -75,6 +106,7 @@ public sealed class Photo
     {
         Id = id;
         DateTaken = dateTaken;
+        GroupKey = groupKey;
         Camera = camera;
         Exposure = exposure;
         Location = location;
@@ -94,10 +126,18 @@ public sealed class Photo
         UpdatedAt = updatedAt;
     }
 
-    public PhotoFile AddFile(string fileName, string filePath, PhotoFileType fileType, long? sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
+    public PhotoFile AddFile(NewFileDto newFile)
     {
-        var photoFile = PhotoFile.Create(fileName, filePath, fileType, sizeBytes, checksum, metadata);
+        if(_files.Any(f => f.Checksum.SequenceEqual(newFile.Checksum)))
+        {
+            throw new PhotoFilesMustBeUniqueException();
+        }
+
+        var photoFile = PhotoFile.Create(newFile.FileName, newFile.FilePath, newFile.FileType, 
+                                                newFile.SizeBytes, newFile.Checksum, newFile.Metadata);
         _files.Add(photoFile);
+
+        GroupKey = GroupKeyService.GetBestGroupKey(GroupKey, newFile.FileName);
 
         return photoFile;
     }

@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using PhotoCat.Application.Exceptions;
 using PhotoCat.Application.Interfaces;
+using PhotoCat.Domain.Photos;
 using PhotoCat.Infrastructure.Metadata;
 
 namespace PhotoCat.Application.Photos.AddPhotoFile;
@@ -43,7 +44,7 @@ public sealed class AddPhotoFileCommandHandler(IExifExtractor exifExtractor, ICh
         request.File.Seek(0, SeekOrigin.Begin);
         var fileType = _fileTypeDetector.Detect(request.File);
 
-        var file = photo.AddFile(request.FileName, filePath, fileType, request.File.Length, checksum, metadata);
+        var file = photo.AddFile(new NewFileDto(request.FileName, filePath, fileType, checksum, request.File.Length, metadata));
         await _photoRepository.UpdateAsync(photo, ct);
 
         return file.Id;

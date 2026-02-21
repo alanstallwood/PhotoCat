@@ -28,3 +28,4 @@
 /PhotoCat.Tests/obj
 /PhotoCat.UI.BlazorServer/obj
 /PhotoCat.UI.BlazorServer/bin/Debug/net10.0
+/PhotoCat.FileSystemScanner.cs/obj

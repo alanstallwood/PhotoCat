@@ -23,16 +23,16 @@ namespace PhotoCat.Domain.Photos
         private PhotoFile(string fileName, string filePath, PhotoFileType fileType, long? sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
         {
             if (string.IsNullOrWhiteSpace(fileName))
-                throw new InvalidFileNameException();
+                throw new PhotoFileMustHaveAFileNameException();
 
             if (string.IsNullOrWhiteSpace(filePath))
-                throw new InvalidFilePathException();
+                throw new PhotoFileMustHaveAFilePathException();
 
             if (checksum is null || checksum.Length == 0)
-                throw new InvalidChecksumException();
+                throw new PhotoFilesMustHaveAChecksumException();
 
             if (sizeBytes < 0)
-                throw new InvalidFileSizeException(sizeBytes.Value);
+                throw new PhotoFilesMustHaveAPositvieSizeValueException(sizeBytes.Value);
 
 
             Id = Guid.NewGuid();
@@ -44,7 +44,7 @@ namespace PhotoCat.Domain.Photos
             Dimensions = metadata?.Dimensions;
         }
 
-        public static PhotoFile Create(string fileName, string filePath, PhotoFileType fileType, long? sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
+        internal static PhotoFile Create(string fileName, string filePath, PhotoFileType fileType, long? sizeBytes, byte[] checksum, PhotoMetadata? metadata = null)
         {
             return new PhotoFile(fileName, filePath, fileType, sizeBytes, checksum, metadata);
         }

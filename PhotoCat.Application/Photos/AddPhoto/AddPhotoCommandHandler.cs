@@ -26,43 +26,19 @@ public sealed class AddPhotoCommandHandler(IExifExtractor exifExtractor, IChecks
         if (newFiles.Count == 0)
             throw new AllFilesAlreadyExistException();
 
-        var mainFile = newFiles
-            .FirstOrDefault(f => f.FileType == PhotoFileType.Nef);
-
-        if(mainFile == default)
-        {
-            mainFile = newFiles.First();
-        }
-
         // Create the aggregate using the factory
         var photo = Photo.Create(
-            mainFile.Metadata,
+            newFiles,
             request.Tags);
-
-        newFiles.ForEach(f =>
-        {
-            var file = photo.AddFile(
-                f.FileName,
-                f.FilePath,
-                f.FileType,
-                f.SizeBytes,
-                f.Checksum,
-                f.Metadata);
-
-            if (f == mainFile)
-            {
-                photo.SetRepresentativeFile(file.Id);
-            }
-        });
 
         await _photoRepository.AddAsync(photo, ct);
 
         return photo.Id;
     }
 
-    private async Task<List<NewFileData>> BuildNewFilesAsync(IReadOnlyCollection<string> fullFilePaths, CancellationToken ct)
+    private async Task<List<NewFileDto>> BuildNewFilesAsync(IReadOnlyCollection<string> fullFilePaths, CancellationToken ct)
     {
-        var results = new List<NewFileData>();
+        var results = new List<NewFileDto>();
 
         foreach (var fullFilePath in fullFilePaths)
         {
@@ -78,7 +54,7 @@ public sealed class AddPhotoCommandHandler(IExifExtractor exifExtractor, IChecks
             var fileType = _fileTypeDetector.Detect(fullFilePath);
             var fileInfo = new FileInfo(fullFilePath);
 
-            results.Add(new NewFileData(
+            results.Add(new NewFileDto(
                 fileInfo.Name,
                 fileInfo.DirectoryName!,
                 fileType,
