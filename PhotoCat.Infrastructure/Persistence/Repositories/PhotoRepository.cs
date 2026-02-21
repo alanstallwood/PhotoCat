@@ -42,7 +42,7 @@ public sealed class PhotoRepository(PhotoCatDbContext db) : IPhotoRepository
         return photo.Id;
     }
 
-    public async Task<bool> FileChecksumExistsAsync(byte[] checksum, CancellationToken ct)
+    public async Task<bool> FileChecksumExistsAsync(byte[] checksum, CancellationToken ct = default)
     {
         return await _db.Photos
             .SelectMany(p => p.Files)
