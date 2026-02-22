@@ -1,9 +1,11 @@
 ﻿using MediatR;
 using PhotoCat.Application;
+using PhotoCat.Application.Exceptions;
 using PhotoCat.Application.Interfaces;
 using PhotoCat.Application.Photos;
 using PhotoCat.Application.Photos.AddPhoto;
 using PhotoCat.Application.Photos.DeletePhotoFile;
+using PhotoCat.Domain.Services;
 using System.Text.RegularExpressions;
 
 namespace PhotoCat.FileSystemScanner.Services;
@@ -17,18 +19,24 @@ public partial class PhotoSyncWorker(IChecksumService checksumService, IPhotoRep
     private readonly IMediator _mediator = mediator;
     private readonly ILogger<PhotoSyncWorker> _logger = logger;
 
-    public async Task RunFullScanAsync()
+    public async Task RunFullScanAsync(CancellationToken ct)
     {
         var filesOnDisk = Directory
             .EnumerateFiles(_basePath, "*.*", SearchOption.AllDirectories)
             .ToList();
+
+        if (!filesOnDisk.Any())
+        {
+            _logger.LogInformation("No new files found to sync.");
+            return;
+        }
 
         var newFiles = new List<(string Path, byte[] Checksum)>();
 
         // Step 1: Compute checksum and filter out duplicates
         foreach (var file in filesOnDisk)
         {
-            var checksum = await _checksumService.CalculateAsync(file);
+            var checksum = await _checksumService.CalculateAsync(file, ct);
 
             var existingNewFile = newFiles.Any(f => f.Checksum.SequenceEqual(checksum));
             if(existingNewFile)
@@ -36,7 +44,7 @@ public partial class PhotoSyncWorker(IChecksumService checksumService, IPhotoRep
                 continue; // Skip if already in new files list
             }
 
-            var existingPhotoRecord = await CheckForExistingPhotoFileAndLogIfFound(file);
+            var existingPhotoRecord = await CheckForExistingPhotoFileAndLogIfFound(file, ct);
             if (existingPhotoRecord)
             {
                 continue;
@@ -45,25 +53,34 @@ public partial class PhotoSyncWorker(IChecksumService checksumService, IPhotoRep
             newFiles.Add((file, checksum));
         }
 
-        // Step 2: Group by normalized filename
-        var groups = GroupFilesByBase(newFiles);
-
-        // Step 3: Send batched AddPhotoCommand per group
-        foreach (var group in groups)
+        const int batchSize = 50;
+        foreach (var chunk in newFiles.Chunk(batchSize))
         {
-            var command = new AddPhotoCommand(
-                [.. group.Select(f => f.Path)]
-            );
-            await _mediator.Send(command);
+            var command = new AddPhotoCommand([.. chunk.Select(c => c.Path)]);
+
+            try
+            {
+                var photoId = await _mediator.Send(command, ct);
+
+                _logger.LogInformation($"Processed batch, New or modified photos: {photoId}");
+            }
+            catch (AllFilesAlreadyExistException)
+            {
+                _logger.LogInformation("All files in batch already exist. Skipping.");
+            }
+            catch (NoFilesProvidedException)
+            {
+                _logger.LogInformation("No valid files in batch. Skipping.");
+            }
         }
 
         // Step 4: Handle missing files (soft-delete)
-        var dbFiles = await _photoRepository.GetAllPhotoFilesAsync();
-        foreach (var dbFile in dbFiles)
+        var allDbPhotoFileFullPaths = await _photoRepository.GetAllPhotoFileFullPathsAsync(ct);
+        foreach (var dbFile in allDbPhotoFileFullPaths)
         {
-            if (!File.Exists(dbFile.Path))
+            if (!File.Exists(dbFile.FullFilePath))
             {
-                await _mediator.Send(new DeletePhotoFileCommand(dbFile.PhotoId, dbFile.Id));
+                await _mediator.Send(new DeletePhotoFileCommand(dbFile.PhotoId, dbFile.FileId), ct);
             }
         }
     }
@@ -82,13 +99,14 @@ public partial class PhotoSyncWorker(IChecksumService checksumService, IPhotoRep
         await _mediator.Send(command);
     }
 
-    private List<List<(string Path, byte[] Checksum)>> GroupFilesByBase(List<(string Path, byte[] Checksum)> files)
+    private static List<List<(string Path, byte[] Checksum)>> GroupFilesByKeyCandidate(List<(string Path, byte[] Checksum)> files)
     {
         var allFiles = new List<(string Path, string Base, byte[] Checksum)>();
         foreach (var f in files)
         {
-            var baseName = NormalizeFileName(Path.GetFileNameWithoutExtension(f.Path));
-            allFiles.Add((f.Path, baseName, f.Checksum));
+            var file = new FileInfo(f.Path);
+            var keyCandidate = GroupKeyService.NormalizeAndRemoveModifiers(file.Name);
+            allFiles.Add((f.Path, keyCandidate, f.Checksum));
         }
 
         var groups = new List<List<(string Path, byte[] Checksum)>>();
@@ -108,26 +126,15 @@ public partial class PhotoSyncWorker(IChecksumService checksumService, IPhotoRep
         return groups;
     }
 
-    private async Task<bool> CheckForExistingPhotoFileAndLogIfFound(string path)
+    private async Task<bool> CheckForExistingPhotoFileAndLogIfFound(string path, CancellationToken ct = default)
     {
-        var checksum = await _checksumService.CalculateAsync(path);
-        var exists = await _photoRepository.FileChecksumExistsAsync(checksum);
+        var checksum = await _checksumService.CalculateAsync(path, ct);
+        var exists = await _photoRepository.FileChecksumExistsAsync(checksum, ct);
         if (exists)
         {
             _logger.LogInformation($"Duplicate file skipped: {path} (checksum {checksum})");
         }
         return exists;
-    }
-
-    string NormalizeFileName(string filename)
-    {
-        // Remove extension
-        var name = Path.GetFileNameWithoutExtension(filename).ToLowerInvariant();
-
-        // Remove non-alphanumeric characters
-        name = NonAlphaNumberic().Replace(name, "");
-
-        return name;
     }
 
     [GeneratedRegex(@"[^a-z0-9]")]

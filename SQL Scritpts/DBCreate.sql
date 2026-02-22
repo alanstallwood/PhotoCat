@@ -26,7 +26,8 @@ CREATE TABLE photos (
 	representative_file_id UUID,
 	is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC'),
-    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC')
+    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC'),
+	CONSTRAINT uq_photos_group_key UNIQUE (group_key)
 );
 
 CREATE INDEX idx_photos_date_taken ON photos(date_taken);

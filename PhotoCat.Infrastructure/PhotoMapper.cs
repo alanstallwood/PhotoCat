@@ -91,6 +91,24 @@ public static class PhotoMapper
         );
     }
 
+    public static PhotoFile ToDomain(PhotoFileRecord record)
+    {
+        return new PhotoFile(
+            record.Id,
+            record.PhotoId,
+            record.FileName,
+            record.FilePath,
+            record.FileType,
+            record.SizeBytes,
+            record.Checksum,
+            BuildDimensions(record),
+            record.Notes,
+            record.IsDeleted,
+            record.CreatedAt,
+            record.UpdatedAt
+        );
+    }
+
     private static CameraInfo? BuildCamera(PhotoRecord record)
     {
         if (string.IsNullOrWhiteSpace(record.CameraMake) &&

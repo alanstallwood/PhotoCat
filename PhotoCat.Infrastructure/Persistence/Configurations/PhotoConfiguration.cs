@@ -83,6 +83,10 @@ public sealed class PhotoConfiguration : IEntityTypeConfiguration<PhotoRecord>
            .HasDatabaseName("idx_photos_not_deleted")
            .HasFilter("is_deleted = false");
 
+        builder.HasIndex(f => f.GroupKey)
+            .IsUnique()
+            .HasDatabaseName("uq_photos_group_key");
+
         builder.OwnsMany(p => p.Tags, tags =>
         {
             tags.ToTable("photo_tags");          // table for the collection

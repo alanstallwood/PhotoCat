@@ -57,4 +57,22 @@ public sealed class PhotoRepository(PhotoCatDbContext db) : IPhotoRepository
 
         await _db.SaveChangesAsync(ct);
     }
+
+    public async Task<Photo?> GetByGroupKeyAsync(string groupKey, CancellationToken ct)
+    {
+        var record = await _db.Photos
+            .FirstOrDefaultAsync(p => p.GroupKey == groupKey && !p.IsDeleted, ct);
+
+        return record != null ? PhotoMapper.ToDomain(record) : null;
+    }
+
+    public async Task<IEnumerable<PhotoFileFullPathAndIdsDto>> GetAllPhotoFileFullPathsAsync(CancellationToken ct = default)
+    {
+        var fileProperties = await _db.Photos
+            .SelectMany(p => p.Files)
+            .Select(f => new { f.Id, f.PhotoId, f.FilePath, f.FileName })
+            .ToListAsync(ct);
+
+        return fileProperties.Select(f => new PhotoFileFullPathAndIdsDto(f.PhotoId, f.Id, Path.Combine(f.FilePath, f.FileName)));
+    }
 }

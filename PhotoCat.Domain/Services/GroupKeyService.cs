@@ -20,32 +20,48 @@ public static partial class GroupKeyService
             return candidate;
         }
 
-        var currentMatch = StructuredPattern().Match(currentGroupKey);
-        var candidateMatch = StructuredPattern().Match(candidate);
-
-        // If both are structured camera-style names
-        if (currentMatch.Success && candidateMatch.Success)
-        {
-            var currentPrefix = currentMatch.Groups[1].Value;
-            var currentNumber = currentMatch.Groups[2].Value;
-
-            var candidatePrefix = candidateMatch.Groups[1].Value;
-            var candidateNumber = candidateMatch.Groups[2].Value;
-
-            // Different numeric identity → NEVER evolve
-            if (currentPrefix == candidatePrefix &&
-                currentNumber != candidateNumber)
-            {
-                return currentGroupKey;
-            }
-        }
+        if (HasStructuredIdentityConflict(currentGroupKey, candidate))
+            return currentGroupKey;
 
         var currentScore = Score(currentGroupKey);
         var candidateScore = Score(candidate);
 
+        return ChooseHigherScore(currentGroupKey, candidate);
+    }
+
+    public static bool BelongToSameLogicalPhoto(string keyA, string keyB)
+    {
+        var evolved = GetBestGroupKey(keyA, keyB);
+
+        return evolved == keyA || evolved == keyB;
+    }
+
+    private static bool HasStructuredIdentityConflict(string currentKey, string candidateKey)
+    {
+        var currentMatch = StructuredPattern().Match(currentKey);
+        var candidateMatch = StructuredPattern().Match(candidateKey);
+
+        if (!currentMatch.Success || !candidateMatch.Success)
+            return false;
+
+        var currentPrefix = currentMatch.Groups[1].Value;
+        var currentNumber = currentMatch.Groups[2].Value;
+
+        var candidatePrefix = candidateMatch.Groups[1].Value;
+        var candidateNumber = candidateMatch.Groups[2].Value;
+
+        return currentPrefix == candidatePrefix &&
+               currentNumber != candidateNumber;
+    }
+
+    private static string ChooseHigherScore(string currentKey, string candidateKey)
+    {
+        var currentScore = Score(currentKey);
+        var candidateScore = Score(candidateKey);
+
         return candidateScore > currentScore
-            ? candidate
-            : currentGroupKey;
+            ? candidateKey
+            : currentKey;
     }
 
     private static int Score(string key)
@@ -60,7 +76,7 @@ public static partial class GroupKeyService
         return score;
     }
 
-    private static string NormalizeAndRemoveModifiers(string fileName)
+    public static string NormalizeAndRemoveModifiers(string fileName)
     {
         var name = Path.GetFileNameWithoutExtension(fileName)
             .ToLowerInvariant();
